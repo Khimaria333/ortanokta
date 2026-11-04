@@ -1,4 +1,4 @@
-:root{color-scheme:dark light}
+:root{color-scheme:only light}
 /* Bağımsız (telefona kurulan) sürüm için ekler */
 html,body{background:#170f2e;height:var(--appH, 100%)}
 #game{padding-top:env(safe-area-inset-top)}
