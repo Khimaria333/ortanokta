@@ -393,3 +393,10 @@ button{font:inherit;color:inherit}
 .minisum{display:flex;flex-direction:column;gap:6px}
 .minisum span{font-size:13px;font-weight:700;padding:6px 10px;border-radius:10px;background:var(--paper2)}
 .minisum span.ok{background:#ffe9ee}
+
+/* ---------- gizli görev kartı ---------- */
+.missioncardfull{background:radial-gradient(circle at 50% 35%, #4a2f86, #1a1033 70%);cursor:default}
+.missioncardfull .mtext{font-family:var(--font-h);font-weight:700;font-size:22px;line-height:1.25;color:#fff;background:#ffffff14;border:2px dashed #ffc94a88;border-radius:18px;padding:16px 18px;margin:8px 0 14px;max-width:360px;animation:stamp .6s .5s cubic-bezier(.3,1.4,.5,1) both}
+.missioncardfull p{max-width:340px;font-size:14.5px;line-height:1.5;margin:4px 0}
+.missioncardfull .mnote{color:#a99bd0;font-size:13px}
+.missioncardfull .btn{animation:rise-in .5s 1s both}

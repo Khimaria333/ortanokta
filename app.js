@@ -308,6 +308,7 @@ function playerStatus(p){
   if (pv === 'ending') return 'Sonu okuyor';
   if (pv === 'title') return 'Ana menüde';
   if (pv === 'chapter') return 'Bölüm açılıyor';
+  if (pv === 'mission') return 'Gizli görevini okuyor';
   if (pv === 'rps') return 'Taş-kağıt-makas';
   if (pv === 'mini') return 'Mini oyunda';
   return 'Düşünüyor…';
@@ -337,6 +338,7 @@ function decide(){
   if (P.scene === 'end') return show('ending', P.seed + ':' + P.step);
   const ch = S[P.scene].ch;
   if (chapShown(P) !== ch) return show('chapter', P.seed + ':' + ch);
+  if (!LS.get('mission:' + P.seed, false) && MISSIONS[P.missions && P.missions[G.me]]) return show('mission', P.seed + ':' + G.me);
   if (inDis()) return show('rps', P.seed + ':' + P.step + ':' + P.dis.round);
   if (inMini()) return show('mini', P.seed + ':' + P.step + ':' + P.mq.k);
   return show('scene', P.seed + ':' + P.step);
@@ -346,7 +348,7 @@ function show(view, key){
   G.run++; G.fast = false; G.skip = null;
   G.view = view; G.viewKey = key; G.sel = null; G.hsel = null; G.asel = null;
   closeSheet();
-  ({pick:viewPick, title:viewTitle, chapter:viewChapter, scene:viewScene, rps:viewRps, mini:viewMini, reveal:viewReveal, ending:viewEnding})[view]();
+  ({pick:viewPick, title:viewTitle, chapter:viewChapter, mission:viewMission, scene:viewScene, rps:viewRps, mini:viewMini, reveal:viewReveal, ending:viewEnding})[view]();
   updatePresence();
 }
 function patch(){
@@ -416,6 +418,24 @@ function viewChapter(){
   const go = () => { if (run !== G.run) return; markChap(P, ch); G.view = null; decide(); };
   const el = $('#chapc'); el.onclick = go; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(); };
   setTimeout(go, reduced ? 800 : 3200);
+}
+
+// ---------- gizli görev kartı ----------
+function viewMission(){
+  setChrome('none');
+  const P = G.P, m = MISSIONS[P.missions[G.me]], op = NAMES[other(G.me)];
+  $('#screen').innerHTML = `<div class="full chapcard missioncardfull">
+    <div class="orn">🤫</div>
+    <div class="num">Sadece sen görüyorsun</div>
+    <h2>Gizli görevin</h2>
+    <div class="mtext">${esc(m.t)}</div>
+    <p>${esc(op)}'in de bir gizli görevi var ve onu sen göremiyorsun. Görevler birbirine ters düşebilir. Oyun sonunda ikisi de açılacak.</p>
+    <p class="mnote">Unutursan alttaki <b>🤫 Görev</b> menüsünden tekrar bakabilirsin.</p>
+    <button class="btn gold" id="mOk" style="flex:none;margin-top:18px;min-width:220px">Anladım, başlayalım ▶</button>
+  </div>`;
+  Sound.play('chapter');
+  $('#mOk').onclick = () => { Sound.play('lock'); LS.set('mission:' + P.seed, true); G.view = null; decide(); };
+  setTimeout(() => { const b = $('#mOk'); if (b) b.focus({preventScroll:true}); }, 100);
 }
 
 // ---------- sahne ----------
