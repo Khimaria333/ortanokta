@@ -456,3 +456,10 @@ button{font:inherit;color:inherit}
 .epi{margin:18px 0 6px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);text-align:left}
 .epi h3{margin:0 0 8px}
 .epi #epit{font-size:15px;line-height:1.55;color:#eee6ff}
+.picbox{margin-top:12px;padding:12px 14px;border-radius:16px;background:#fff4f8;border:1.5px dashed #ff9fbf;display:flex;flex-direction:column;gap:6px;text-align:center}
+.picbox b{font-family:var(--font-h);font-size:15px;color:#a3245a}
+.picbox span{font-size:13.5px;color:#5a4a6a}
+.picbox small{color:var(--soft);font-size:12px}
+.picbtns{display:flex;gap:8px;justify-content:center;margin-top:4px}
+.picbtns .btn{flex:1 1 auto}
+.picbtns #picDel{flex:0 0 auto}

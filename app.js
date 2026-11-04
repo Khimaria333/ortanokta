@@ -156,13 +156,13 @@ function stageHTML(key, opts = {}){
 // =====================================================================
 //  DURUM
 // =====================================================================
-const PATH = {custom:'o3/custom', album:'o3/album', state:'o3/state', vote:p => 'o3votes/' + p, hand:p => 'o3hands/' + p, ans:p => 'o3ans/' + p, jok:p => 'o3jok/' + p};
+const PATH = {custom:'o3/custom', album:'o3/album', state:'o3/state', vote:p => 'o3votes/' + p, hand:p => 'o3hands/' + p, ans:p => 'o3ans/' + p, jok:p => 'o3jok/' + p, pic:p => 'o3pics/' + p};
 const G = {
   db:null, room:null, user:null, ref:null, vref:{},
   P:null, V:{irem:null, cengiz:null}, T:{irem:null, cengiz:null}, tref:{}, A:{irem:null, cengiz:null}, aref:{}, asel:null, answering:false, loaded:{p:false, irem:false, cengiz:false}, ready:false, hsel:null, throwing:false,
   me:null, readOnly:false, view:null, viewKey:null, sel:null, voting:false, advancing:-1, starting:false,
   run:0, skip:null, fast:false, peers:[], toastedStep:-1, lastReact:0, nudgeAt:0,
-  found:LS.get('found', []), C:{qs:[]}, ALB:{games:[]}, cref:null, albref:null, newBadges:null, Jk:{irem:null, cengiz:null}, jref:{}, useSans:false
+  found:LS.get('found', []), C:{qs:[]}, ALB:{games:[]}, cref:null, albref:null, newBadges:null, Jk:{irem:null, cengiz:null}, jref:{}, useSans:false, PIC:{irem:null, cengiz:null}, pref:{}, cardOpen:false
 };
 const isMeOnline = () => true;
 
@@ -1368,7 +1368,55 @@ function wrapText(ctx, text, x, y, maxW, lh, maxLines){
   for (const w of words){ const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line){ ctx.fillText(line, x, y); y += lh; line = w; if (++n >= maxLines - 1){ break; } } else line = t; }
   if (line) ctx.fillText(line, x, y); return y + lh;
 }
-function makeCard(P){
+// ---------- anı kartı fotoğrafları ----------
+const PIC_CACHE = {};
+function loadPic(p){
+  const src = G.PIC[p]; if (!src) return Promise.resolve(null);
+  if (PIC_CACHE[p] && PIC_CACHE[p].src === src) return Promise.resolve(PIC_CACHE[p].img);
+  return new Promise(res => { const im = new Image(); im.onload = () => { PIC_CACHE[p] = {src, img:im}; res(im); }; im.onerror = () => res(null); im.src = src; });
+}
+function heartPath(c, cx, cy, w, h){
+  const top = cy - h * .5;
+  c.beginPath();
+  c.moveTo(cx, top + h * .28);
+  c.bezierCurveTo(cx, top, cx - w * .5, top, cx - w * .5, top + h * .3);
+  c.bezierCurveTo(cx - w * .5, top + h * .58, cx - w * .1, top + h * .78, cx, top + h);
+  c.bezierCurveTo(cx + w * .1, top + h * .78, cx + w * .5, top + h * .58, cx + w * .5, top + h * .3);
+  c.bezierCurveTo(cx + w * .5, top, cx, top, cx, top + h * .28);
+  c.closePath();
+}
+function drawHeart(c, cx, cy, w, h, imgs, E){
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 30; c.shadowOffsetY = 10;
+  heartPath(c, cx, cy, w + 24, h + 22); c.fillStyle = '#fff'; c.fill();
+  c.restore();
+  c.save(); heartPath(c, cx, cy, w, h); c.clip();
+  [['irem', cx - w / 2, '#ff8fb1'], ['cengiz', cx, '#5bc0eb']].forEach(([p, x, col]) => {
+    const im = imgs[p];
+    c.save(); c.beginPath(); c.rect(x, cy - h / 2, w / 2, h); c.clip();
+    if (im){
+      // kalbin yarısını dolduracak şekilde ortadan kırp
+      const tw = w / 2, th = h, s = Math.max(tw / im.width, th / im.height) * 1.0;
+      const dw = im.width * s, dh = im.height * s;
+      c.drawImage(im, x + (tw - dw) / 2, cy - h / 2 + (th - dh) / 2, dw, dh);
+    } else {
+      const gg = c.createLinearGradient(x, cy - h / 2, x, cy + h / 2); gg.addColorStop(0, col); gg.addColorStop(1, '#7c3aa8');
+      c.fillStyle = gg; c.fillRect(x, cy - h / 2, w / 2, h);
+      c.textAlign = 'center'; c.font = '110px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; c.fillStyle = '#fff';
+      c.fillText(AV[p], x + w / 4 + (p === 'irem' ? 18 : -18), cy + 20);
+    }
+    c.restore();
+  });
+  c.restore();
+  // ortadaki ince çizgi ve isimler
+  c.save(); heartPath(c, cx, cy, w, h); c.clip(); c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(cx - 3, cy - h / 2, 6, h); c.restore();
+  heartPath(c, cx, cy, w, h); c.lineWidth = 6; c.strokeStyle = '#fff'; c.stroke();
+  // sonun rozeti
+  const bx = cx + w * .36, by = cy + h * .34;
+  c.fillStyle = '#ffc94a'; c.beginPath(); c.arc(bx, by, 58, 0, 7); c.fill(); c.lineWidth = 6; c.strokeStyle = '#fff'; c.stroke();
+  c.textAlign = 'center'; c.font = '62px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; c.fillStyle = '#000'; c.fillText(E.i, bx, by + 22);
+}
+function makeCard(P, imgs){
   const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const c = cv.getContext('2d'), E = ENDINGS[P.ending] || ENDINGS.klasik;
   const fh = (w, s) => `${w} ${s}px Fredoka, "Baloo 2", system-ui, sans-serif`, fb = (w, s) => `${w} ${s}px Nunito, system-ui, sans-serif`;
@@ -1376,9 +1424,13 @@ function makeCard(P){
   for (let i = 0; i < 70; i++){ c.fillStyle = `rgba(255,255,255,${.15 + (i % 5) * .1})`; c.beginPath(); c.arc((i * 137.5) % W, (i * 71.3) % (H * .55), 2 + (i % 3), 0, 7); c.fill(); }
   c.textAlign = 'center'; c.fillStyle = '#ffd56a'; c.font = fh(700, 40); c.fillText('ORTANOKTA MACERASI', W / 2, 110);
   c.fillStyle = '#fff'; c.font = fb(700, 34); c.fillText('🌸 İrem & Cengiz 🌊', W / 2, 165);
-  c.fillStyle = 'rgba(255,255,255,.14)'; c.beginPath(); c.arc(W / 2, 370, 150, 0, 7); c.fill();
-  c.fillStyle = '#ffc94a'; c.beginPath(); c.arc(W / 2, 370, 120, 0, 7); c.fill();
-  c.font = '130px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; c.fillText(E.i, W / 2, 420);
+  if (imgs && (imgs.irem || imgs.cengiz)) drawHeart(c, W / 2, 360, 400, 350, imgs, E);
+  else {
+    c.fillStyle = 'rgba(255,255,255,.14)'; c.beginPath(); c.arc(W / 2, 370, 150, 0, 7); c.fill();
+    c.fillStyle = '#ffc94a'; c.beginPath(); c.arc(W / 2, 370, 120, 0, 7); c.fill();
+    c.font = '130px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; c.fillText(E.i, W / 2, 420);
+  }
+  c.textAlign = 'center';
   c.fillStyle = '#ffd56a'; c.font = fh(600, 30); c.fillText(`SON ${ENDING_ORDER.indexOf(P.ending) + 1} / ${ENDING_ORDER.length}`, W / 2, 575);
   c.fillStyle = '#fff'; c.font = fh(700, 74); c.fillText(E.t, W / 2, 660);
   const stats = [['💞', P.uyum, 'Uyum'], ['🌪️', P.kaos, 'Kaos'], ['🎯', `${P.mqMatch || 0}/${P.mqTotal || 0}`, 'Mini oyun'], ['🎬', P.log.length, 'Hamle']];
@@ -1391,18 +1443,68 @@ function makeCard(P){
   c.fillText(`${fmtDate(Date.now())}${window.__STANDALONE ? ' · khimaria333.github.io/ortanokta' : ''}`, W / 2, 1300);
   return cv;
 }
-async function openCard(){
+// kameradan/galeriden gelen fotoğrafı küçültüp kare JPEG yap
+function shrinkPhoto(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const S = 420, cv = document.createElement('canvas'); cv.width = S; cv.height = S;
+      const c = cv.getContext('2d'), m = Math.min(im.width, im.height);
+      c.drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, S, S);
+      URL.revokeObjectURL(url);
+      let q = .82, out = cv.toDataURL('image/jpeg', q);
+      while (out.length > 90000 && q > .4){ q -= .1; out = cv.toDataURL('image/jpeg', q); }
+      res(out);
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+    im.src = url;
+  });
+}
+function pickPhoto(capture){
+  if (G.readOnly) return toast('Fotoğraf ekleme iznin yok.');
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  if (capture) inp.setAttribute('capture', 'user');
+  inp.style.display = 'none'; document.body.appendChild(inp);
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+    try {
+      toast('Fotoğraf hazırlanıyor…');
+      const img = await shrinkPhoto(f);
+      await G.pref[G.me].set({img, at:Date.now()});
+      G.PIC[G.me] = img; delete PIC_CACHE[G.me]; Sound.play('heart'); openCard(true);
+    } catch(e){ if (e && e.message === 'img') toast('Bu fotoğraf açılamadı, başka biriyle dene.'); else writeErr(e); }
+  };
+  inp.click();
+}
+async function openCard(keep){
   const P = G.P; if (!isGame(P) || P.scene !== 'end') return;
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e){}
-  const cv = makeCard(P);
+  const imgs = {irem:await loadPic('irem'), cengiz:await loadPic('cengiz')};
+  const cv = makeCard(P, imgs);
   const url = cv.toDataURL('image/png');
+  const st = p => G.PIC[p] ? '✅' : '⏳';
+  const scrollY = keep && $('#sheetBody') ? $('#sheetBody').scrollTop : 0;
+  G.cardOpen = true;
   $('#sheetTitle').textContent = '🖼️ Anı kartı';
   $('#sheetBody').innerHTML = `<img src="${url}" alt="Anı kartı" class="cardimg">
+    <div class="picbox">
+      <b>💞 Kalbin içine fotoğraflarınız</b>
+      <span>${st('irem')} ${NAMES.irem} · ${st('cengiz')} ${NAMES.cengiz}${!G.PIC[other(G.me)] ? `<br><small>${esc(NAMES[other(G.me)])} kendi telefonundan anı kartını açıp fotoğrafını eklediğinde burada belirir.</small>` : ''}</span>
+      <div class="picbtns">
+        <button class="btn violet small" id="picCam">📸 ${G.PIC[G.me] ? 'Yeniden çek' : 'Fotoğrafımı çek'}</button>
+        <button class="btn ghost small" id="picGal">🖼️ Galeriden</button>
+        ${G.PIC[G.me] ? `<button class="btn ghost small" id="picDel">🗑️</button>` : ''}
+      </div>
+    </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
       <button class="btn" id="cardShare">📤 Paylaş ya da kaydet</button>
       <p class="sub" style="text-align:center;margin:0;font-size:12.5px;color:var(--soft)">Paylaş düğmesi çalışmazsa görsele basılı tutup "Fotoğraflara kaydet" diyebilirsin.</p>
     </div>`;
   $('#sheet').classList.add('on');
+  if (scrollY) $('#sheetBody').scrollTop = scrollY;
+  $('#picCam').onclick = () => pickPhoto(true);
+  $('#picGal').onclick = () => pickPhoto(false);
+  const pd = $('#picDel'); if (pd) pd.onclick = () => confirmBox('Fotoğrafın kaldırılsın mı?', 'Anı kartındaki kalpten senin yarın çıkar.', async () => { try { await G.pref[G.me].set({img:null, at:Date.now()}); G.PIC[G.me] = null; delete PIC_CACHE[G.me]; openCard(true); } catch(e){ writeErr(e); } });
   $('#cardShare').onclick = () => {
     cv.toBlob(async blob => {
       if (!blob) return toast('Görsel hazırlanamadı.');
@@ -1419,6 +1521,7 @@ async function openCard(){
 function openSheet(name, keep){
   const s = SHEETS[name]; if (!s) return;
   if (!keep) Sound.play('tap');
+  G.cardOpen = false;
   $('#sheetTitle').textContent = s[0];
   $('#sheetBody').innerHTML = s[1]();
   $('#sheet').classList.add('on');
@@ -1436,7 +1539,7 @@ function openSheet(name, keep){
   });
   setTimeout(() => $('#sheetClose').focus({preventScroll:true}), 50);
 }
-function closeSheet(){ $('#sheet').classList.remove('on'); }
+function closeSheet(){ $('#sheet').classList.remove('on'); G.cardOpen = false; }
 
 function confirmBox(title, text, yes){
   $('#modalTitle').textContent = title; $('#modalText').textContent = text;
@@ -1559,6 +1662,13 @@ function bootMsg(html){ $('#screen').innerHTML = `<div class="full" style="backg
   G.aref = {irem:db.doc(PATH.ans('irem')), cengiz:db.doc(PATH.ans('cengiz'))};
   G.cref = db.doc(PATH.custom); G.albref = db.doc(PATH.album);
   G.jref = {irem:db.doc(PATH.jok('irem')), cengiz:db.doc(PATH.jok('cengiz'))};
+  G.pref = {irem:db.doc(PATH.pic('irem')), cengiz:db.doc(PATH.pic('cengiz'))};
+  PL.forEach(p => G.pref[p].onSnapshot(snap => {
+    const d = snap.exists ? snap.data() : null, img = d && typeof d.img === 'string' && d.img.startsWith('data:image/') ? d.img : null;
+    if (img === G.PIC[p]) return;
+    G.PIC[p] = img; delete PIC_CACHE[p];
+    if (G.cardOpen && $('#sheet').classList.contains('on')){ if (p !== G.me && img) toast(`💞 ${NAMES[p]} fotoğrafını ekledi!`); openCard(true); }
+  }, () => {}));
   PL.forEach(p => G.jref[p].onSnapshot(snap => { G.Jk[p] = snap.exists ? snap.data() : null; updateDock(); if (G.ready && p !== G.me){ const u = jokLocalUsed(p), last = u[u.length - 1]; if (last && last.step === (G.P && G.P.step) && LS.get('jokann', '') !== G.P.seed + ':' + last.id){ LS.set('jokann', G.P.seed + ':' + last.id); toast(`🃏 ${NAMES[p]} bir joker kullandı: ${JOKERS[last.t].i} ${JOKERS[last.t].n}`); Sound.play('turn'); } } }, () => {}));
   G.cref.onSnapshot(snap => { const d = snap.exists ? snap.data() : null; G.C = {qs:(d && Array.isArray(d.qs)) ? d.qs.filter(q => q && q.id && q.t) : []}; }, () => {});
   G.albref.onSnapshot(snap => { const d = snap.exists ? snap.data() : null; G.ALB = {games:(d && Array.isArray(d.games)) ? d.games : []}; }, () => {});
