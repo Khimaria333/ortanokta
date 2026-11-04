@@ -1,3 +1,4 @@
+:root{color-scheme:dark light}
 /* Bağımsız (telefona kurulan) sürüm için ekler */
 html,body{background:#170f2e}
 #game{padding-top:env(safe-area-inset-top)}
