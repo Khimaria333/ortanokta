@@ -1008,7 +1008,8 @@ const SHEETS = {
         <button class="btn ghost" data-act="how">📖 Nasıl oynanır</button>
         <button class="btn ghost" data-act="galeri">🏆 Sonlar galerisi</button>
         ${isGame(G.P) ? `<button class="btn" data-act="new" ${G.readOnly ? 'disabled' : ''}>↺ Yeni macera başlat</button>` : ''}
-      </div>`]
+      </div>
+      ${window.__BUILD ? `<p style="text-align:center;font-size:12px;color:var(--soft);margin:16px 0 0">Sürüm ${esc(window.__BUILD)}</p>` : ''}`]
 };
 function openSheet(name){
   const s = SHEETS[name]; if (!s) return;
