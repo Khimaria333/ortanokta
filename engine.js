@@ -45,24 +45,47 @@ function applyFx(N, fx, out){
   if (fx.visit){ N.visits = (N.visits || 0) + fx.visit; }
 }
 
-// Mini oyun soruları (deterministik, aynı oyunda tekrar etmez)
+// Mini oyun soruları (deterministik, aynı oyunda tekrar etmez).
+// Soru metni duruma gömülür; böylece iki cihaz da aynı soruyu görür.
+const CIZ_WORDS = ['Keçi','Balon','Turşu','Kedi','Pasta','Otobüs','Kalp','Güneş','Ev','Ağaç','Fener','Taksi','Kaktüs','Mantı','Yıldız','Değirmen','Dürbün','Gözlük','Şemsiye','Kupa','Anahtar','Balık','Dondurma','Bisiklet','Çiçek','Ay','Bulut','Telefon','Gemi','Pizza'];
 function makeMq(N){
   const sc = S[N.scene], r = rngFor(N.seed ^ 0x5bd1e995, N.step);
   N.qUsed = N.qUsed || [];
+  const cq = Array.isArray(N.cq) ? N.cq : [];
+  const pick = list => list[Math.floor(r() * list.length)];
   const qs = sc.mini.qs.map(([kind, sub]) => {
+    if (kind === 'refleks') return {kind, id:'refleks', sub:null, t:'Profesör belirince ekrana dokun!'};
+    if (kind === 'ciz'){
+      const words = CIZ_WORDS.filter(w => !N.qUsed.includes('ciz:' + w));
+      const w = pick(words.length ? words : CIZ_WORDS);
+      N.qUsed.push('ciz:' + w);
+      const others = CIZ_WORDS.filter(x => x !== w), o = [w];
+      while (o.length < 4){ const x = pick(others); if (!o.includes(x)) o.push(x); }
+      for (let i = o.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+      return {kind, id:'ciz:' + w, sub, t:w, o, c:o.indexOf(w)};
+    }
+    const mine = cq.filter(q => q.kind === kind && (kind !== 'tahmin' || q.by === sub) && !N.qUsed.includes(q.id));
+    if (mine.length && r() < 0.5){
+      const q = pick(mine); N.qUsed.push(q.id);
+      return {kind, id:q.id, sub:sub || null, t:q.t, g:null, o:kind === 'kim' ? null : q.o.slice(0, 4), custom:true, by:q.by};
+    }
     const pool = QB[kind].filter(q => !N.qUsed.includes(q.id));
-    const list = pool.length ? pool : QB[kind];
-    const q = list[Math.floor(r() * list.length)];
+    const q = pick(pool.length ? pool : QB[kind]);
     N.qUsed.push(q.id);
-    return {kind, id:q.id, sub:sub || null};
+    return {kind, id:q.id, sub:sub || null, t:q.t, g:q.g || null, o:q.o ? q.o.slice() : null};
   });
   N.mq = {step:N.step, k:0, qs, res:[]};
 }
-function ansRange(P){ const q = P.mq.qs[P.mq.k]; return q.kind === 'kim' ? 2 : QBY[q.id].o.length; }
+function qOpts(q){ if (q.kind === 'kim') return KIM_OPTS; if (q.o) return q.o; const Q = QBY[q.id]; return Q && Q.o ? Q.o : []; }
+function ansRange(P){ const q = P.mq.qs[P.mq.k]; return q.kind === 'refleks' ? 5001 : qOpts(q).length; }
 function validAnsFor(P, t){ return !!(t && P.mq && t.step === P.step && t.k === P.mq.k && Number.isInteger(t.a) && t.a >= 0 && t.a < ansRange(P)); }
+// Refleks: ikiniz de hızlıysanız (ortalama < 650 ms, ikisi de < 1000 ms) eşleşme sayılır
+function refleksOk(a, b){ return (a + b) / 2 < 650 && a < 1000 && b < 1000; }
+function chOf(id, P){ const s = S[id]; if (!s) return null; if (s.ch !== null && s.ch !== undefined) return s.ch; return (P && P.evtRet && S[P.evtRet]) ? S[P.evtRet].ch : 1; }
 
 // Bir sahneden diğerine geçiş: son kontrolü, giriş etkileri, mini oyun hazırlığı
 function transition(N, go, fx){
+  if (tryEvent(N, go)) return;
   if (go.startsWith('END:')){ N.scene = 'end'; N.ending = go.slice(4); }
   else if (go === 'end'){ N.scene = 'end'; N.ending = evalEnding(N); }
   else {
@@ -73,10 +96,29 @@ function transition(N, go, fx){
   if (N.ending && !N.found.includes(N.ending)) N.found.push(N.ending);
 }
 
+// Rastgele olay: aynı bölüm içindeki geçişlerde araya girer
+function tryEvent(N, go){
+  if (typeof EVENT_IDS === 'undefined' || go.startsWith('END:') || go === 'end') return false;
+  const to = S[go], from = S[N.from];
+  if (!to || !from || to.mini || to.event || from.event || from.individual) return false;
+  if (to.ch !== from.ch || !EVENT_CHAPTERS.includes(to.ch) || (N.evtCount || 0) >= EVENT_MAX) return false;
+  const r = rngFor(N.seed ^ 0x2c1b3c6d, N.step);
+  if (r() >= EVENT_P) return false;
+  const c = ctxOf(N);
+  const pool = EVENT_IDS.filter(id => !(N.evtUsed || []).includes(id) && S[id].cond(c));
+  if (!pool.length) return false;
+  const id = pool[Math.floor(r() * pool.length)];
+  N.evtUsed = (N.evtUsed || []).concat(id); N.evtCount = (N.evtCount || 0) + 1; N.evtRet = go; N.scene = id;
+  return true;
+}
+
 // Mini oyunda bir soruyu cevapla. Son soruysa sahneyi çözer.
-function mqAdvance(P, ai, ac){
+function mqAdvance(P, ai, ac, extra){
   const N = clone(P);
-  N.mq.res.push({i:ai, c:ac, m:ai === ac});
+  const q = N.mq.qs[N.mq.k];
+  const rec = {i:ai, c:ac, m:q.kind === 'refleks' ? refleksOk(ai, ac) : ai === ac};
+  if (extra && typeof extra.d === 'string') rec.d = extra.d;
+  N.mq.res.push(rec);
   N.mq.k++;
   if (N.mq.k < N.mq.qs.length) return N;
   return resolveMini(N);
@@ -97,7 +139,7 @@ function resolveMini(P){
   return N;
 }
 
-function newGame(prev){
+function newGame(prev, cq){
   const seed = Math.floor(Math.random() * 2147483647);
   const keys = Object.keys(MISSIONS);
   const a = keys[Math.floor(Math.random() * keys.length)];
@@ -107,7 +149,8 @@ function newGame(prev){
     stats:{irem:{ce:1, ck:1, ze:1, sa:1}, cengiz:{ce:1, ck:1, ze:1, sa:1}},
     inv:[], npc:{}, flags:{}, uyum:0, kaos:0, wins:{irem:0, cengiz:0},
     missions:{irem:a, cengiz:b}, last:null, log:[], ending:null, dis:null, ikna:0,
-    mq:null, mqMatch:0, mqTotal:0, visits:0, qUsed:[],
+    mq:null, mqMatch:0, mqTotal:0, visits:0, qUsed:[], evtUsed:[], evtCount:0, evtRet:null,
+    cq:Array.isArray(cq) ? cq.filter(q => q && q.id && q.t && ['tahmin','kim','ayni'].includes(q.kind)).slice(0, 60) : [],
     found:(prev && Array.isArray(prev.found)) ? prev.found.filter(k => ENDINGS[k]) : []
   };
 }

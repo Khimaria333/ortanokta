@@ -156,13 +156,13 @@ function stageHTML(key, opts = {}){
 // =====================================================================
 //  DURUM
 // =====================================================================
-const PATH = {state:'o3/state', vote:p => 'o3votes/' + p, hand:p => 'o3hands/' + p, ans:p => 'o3ans/' + p};
+const PATH = {custom:'o3/custom', album:'o3/album', state:'o3/state', vote:p => 'o3votes/' + p, hand:p => 'o3hands/' + p, ans:p => 'o3ans/' + p};
 const G = {
   db:null, room:null, user:null, ref:null, vref:{},
   P:null, V:{irem:null, cengiz:null}, T:{irem:null, cengiz:null}, tref:{}, A:{irem:null, cengiz:null}, aref:{}, asel:null, answering:false, loaded:{p:false, irem:false, cengiz:false}, ready:false, hsel:null, throwing:false,
   me:null, readOnly:false, view:null, viewKey:null, sel:null, voting:false, advancing:-1, starting:false,
   run:0, skip:null, fast:false, peers:[], toastedStep:-1, lastReact:0, nudgeAt:0,
-  found:LS.get('found', [])
+  found:LS.get('found', []), C:{qs:[]}, ALB:{games:[]}, cref:null, albref:null, newBadges:null
 };
 const isMeOnline = () => true;
 
@@ -279,7 +279,7 @@ function updateHUD(){
   const sk = (G.view === 'reveal' && P.last && S[P.last.scene]) ? P.last.scene : P.scene;
   const sc = S[sk];
   if (sk === 'end' || !sc){ $('#hudChap').textContent = 'Final'; $('#hudSub').textContent = (ENDINGS[P.ending] || {}).t || ''; }
-  else { const [a, b] = chParts(sc.ch); $('#hudChap').textContent = sc.ch === 0 ? 'Hazırlık' : a; $('#hudSub').textContent = sc.ch ? b + ' · ' + sc.title : sc.title; }
+  else { const ch = chOf(sk, P), [a, b] = chParts(ch); $('#hudChap').textContent = ch === 0 ? 'Hazırlık' : a; $('#hudSub').textContent = ch ? b + ' · ' + sc.title : sc.title; }
   [['#mUyum', P.uyum], ['#mKaos', P.kaos]].forEach(([s, v]) => {
     const el = $(s), sp = $('span', el);
     if (sp.textContent !== String(v)){ sp.textContent = v; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
@@ -336,7 +336,7 @@ function decide(){
   if (!isGame(P)) return show('title', 'title');
   if (P.last && seenStep(P) < P.step) return show('reveal', P.seed + ':' + P.step);
   if (P.scene === 'end') return show('ending', P.seed + ':' + P.step);
-  const ch = S[P.scene].ch;
+  const ch = chOf(P.scene, P);
   if (chapShown(P) !== ch) return show('chapter', P.seed + ':' + ch);
   if (!LS.get('mission:' + P.seed, false) && MISSIONS[P.missions && P.missions[G.me]]) return show('mission', P.seed + ':' + G.me);
   if (inDis()) return show('rps', P.seed + ':' + P.step + ':' + P.dis.round);
@@ -394,13 +394,17 @@ function viewTitle(){
       <div class="lobby"></div>
       <button class="btn" id="tStart" ${G.readOnly || G.starting ? 'disabled' : ''}>🎈 Yeni macera başlat</button>
       <div class="row"><button class="btn ghost small" style="flex:1" id="tHow">📖 Nasıl oynanır</button><button class="btn ghost small" style="flex:1" id="tGal">🏆 Sonlar ${f.length}/${ENDING_ORDER.length}</button></div>
-      <div class="row"><button class="btn ghost small" style="flex:1" id="tSet">⚙️ Ayarlar</button></div>
+      <div class="row"><button class="btn ghost small" style="flex:1" id="tQs">✍️ Sorularımız</button><button class="btn ghost small" style="flex:1" id="tAlb">📔 Maceralarımız</button></div>
+      <div class="row"><button class="btn ghost small" style="flex:1" id="tBdg">🏅 Rozetler</button><button class="btn ghost small" style="flex:1" id="tSet">⚙️ Ayarlar</button></div>
       <p class="sub" style="margin:0;font-size:12.5px">Biriniz başlatınca diğerinin ekranında da oyun kendiliğinden açılır.</p>
     </div></div>`;
   $('#tStart').onclick = () => { Sound.play('lock'); startGame(); };
   $('#tHow').onclick = () => openSheet('how');
   $('#tGal').onclick = () => openSheet('galeri');
   $('#tSet').onclick = () => openSheet('ayarlar');
+  $('#tQs').onclick = () => openSheet('sorular');
+  $('#tAlb').onclick = () => openSheet('album');
+  $('#tBdg').onclick = () => openSheet('rozetler');
   updatePlayers();
 }
 function patchTitle(){ updatePlayers(); }
@@ -408,7 +412,7 @@ function patchTitle(){ updatePlayers(); }
 // ---------- bölüm kartı ----------
 function viewChapter(){
   setChrome('none');
-  const P = G.P, ch = S[P.scene].ch, [a, b] = chParts(ch);
+  const P = G.P, ch = chOf(P.scene, P), [a, b] = chParts(ch);
   const orn = ['✨','🚌','🗺️','🥒','🎈','⚖️','🏮'][ch] || '✨';
   $('#screen').innerHTML = `<div class="full chapcard" id="chapc" role="button" tabindex="0" aria-label="Devam et">
     <div class="orn">${orn}</div><div class="num">${esc(ch === 0 ? 'Başlangıç' : a)}</div><h2>${esc(b)}</h2><p>${esc(CH_SUB[ch] || '')}</p>
@@ -461,12 +465,12 @@ function viewScene(){
   setChrome('game'); updateHUD();
   const P = G.P, sc = S[P.scene], c = ctxOf(P);
   const sp = SPEAKERS[val(sc.sp, c)] || SPEAKERS.anlatici;
-  const [a] = chParts(sc.ch);
+  const scCh = chOf(P.scene, P), [a] = chParts(scCh);
   $('#screen').innerHTML = `${stageHTML(val(sc.art, c), {loc:sc.title, goat:c.has('profesor') && P.scene !== 'karakter'})}
     <section class="panel">
       <div class="speaker"><span class="face">${sp[0]}</span>${esc(sp[1])}</div>
       <div class="scroll" id="sc">
-        <div class="kicker">${esc(sc.ch === 0 ? 'Hazırlık' : a)} · Hamle ${P.log.length + 1}</div>
+        <div class="kicker">${sc.event ? '⚡ Sürpriz olay' : esc(scCh === 0 ? 'Hazırlık' : a)} · Hamle ${P.log.length + 1}</div>
         <div class="title">${esc(sc.title)}</div>
         ${G.readOnly ? `<div class="notice" style="margin:0 0 8px">Sadece izleyebilirsin: oy verme iznin yok.</div>` : ''}
         <div class="story" id="story"></div>
@@ -536,7 +540,9 @@ async function tryAdvance(){
     const qk = P.step + ':q' + P.mq.k;
     if (G.advancing === qk) return;
     G.advancing = qk;
-    try { await G.ref.set(mqAdvance(P, G.A.irem.a, G.A.cengiz.a)); } catch(e){ G.advancing = -1; writeErr(e); }
+    const cq = P.mq.qs[P.mq.k];
+    const extra = cq.kind === 'ciz' && G.A[cq.sub] && typeof G.A[cq.sub].d === 'string' ? {d:G.A[cq.sub].d.slice(0, 12000)} : null;
+    try { await G.ref.set(mqAdvance(P, G.A.irem.a, G.A.cengiz.a, extra)); } catch(e){ G.advancing = -1; writeErr(e); }
     return;
   }
   if (!validVote(G.V.irem) || !validVote(G.V.cengiz)) return;
@@ -617,68 +623,160 @@ async function castHand(h){
 }
 
 // ---------- mini oyun ----------
+const KIND_NAME2 = {tahmin:'Tahmin et', kim:'Kim daha çok?', ayni:'Aynı anda', ciz:'Çiz-bil', refleks:'Refleks'};
+function qText(q){ if (q.t) return q.t; const Q = QBY[q.id]; return Q ? Q.t : ''; }
+function qThird(q){ if (q.g) return q.g; const Q = QBY[q.id]; return Q && Q.g ? Q.g : null; }
 function qView(q, me){
-  const Q = QBY[q.id], sub = q.sub;
+  const sub = q.sub, op = NAMES[other(me)];
   if (q.kind === 'tahmin'){
-    if (me === sub) return {lead:`🤫 Kendin için dürüstçe cevapla. ${NAMES[other(me)]} tahmin edecek.`, text:Q.t};
-    const g = Q.g; return {lead:`🔮 ${NAMES[sub]} kendisi için ne seçti? Tahmin et!`, text:`${NAMES[sub]} ${g}`};
+    if (me === sub) return {lead:`🤫 Kendin için dürüstçe cevapla. ${op} tahmin edecek.`, text:qText(q)};
+    const g = qThird(q);
+    return {lead:`🔮 ${NAMES[sub]} kendisi için ne seçti? Tahmin et!`, text:g ? `${NAMES[sub]} ${g}` : `${NAMES[sub]} için: ${qText(q)}`};
   }
-  if (q.kind === 'kim') return {lead:'İkiniz de aynı anda cevaplıyorsunuz. Aynı ismi seçerseniz puan!', text:Q.t};
-  return {lead:'İkinize de aynı soru. Aynı cevabı verirseniz puan!', text:Q.t};
+  if (q.kind === 'kim') return {lead:'İkiniz de aynı anda cevaplıyorsunuz. Aynı ismi seçerseniz puan!', text:qText(q)};
+  if (q.kind === 'refleks') return {lead:'⚡ Hazır ol! Profesör belirdiği anda ekrana dokun. İkiniz de hızlıysanız puan!', text:'Profesör\'ü yakala!'};
+  if (q.kind === 'ciz') return me === sub
+    ? {lead:`🎨 Gizli kelimeni çiz. ${op} dört seçenekten tahmin edecek. Yazı yazmak yok!`, text:`Gizli kelimen: ${q.t}`}
+    : {lead:`🎨 ${NAMES[sub]} bir şey çiziyor. Ne olduğunu tahmin et!`, text:'Bu ne?'};
+  return {lead:'İkinize de aynı soru. Aynı cevabı verirseniz puan!', text:qText(q)};
 }
-function qTitle(q){ const Q = QBY[q.id]; return q.kind === 'tahmin' ? `${NAMES[q.sub]} ${Q.g}` : Q.t; }
+function qTitle(q){
+  if (q.kind === 'tahmin'){ const g = qThird(q); return g ? `${NAMES[q.sub]} ${g}` : `${NAMES[q.sub]} için: ${qText(q)}`; }
+  if (q.kind === 'ciz') return `${NAMES[q.sub]} çizdi`;
+  if (q.kind === 'refleks') return 'Profesör\'ü yakala!';
+  return qText(q);
+}
+// --- çizim kodlama: her nokta 4 onaltılık karakter (x,y: 0-255), çizgiler '|' ile ayrılır
+const hx = n => ('0' + Math.max(0, Math.min(255, Math.round(n))).toString(16)).slice(-2);
+function drawStrokes(cv, str, animate){
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#2e2140'; ctx.lineWidth = W / 55;
+  const strokes = (str || '').split('|').filter(Boolean).map(sx => { const pts = []; for (let i = 0; i + 3 < sx.length; i += 4) pts.push([parseInt(sx.slice(i, i + 2), 16) / 255 * W, parseInt(sx.slice(i + 2, i + 4), 16) / 255 * H]); return pts; });
+  const seg = (pts, n) => { ctx.beginPath(); pts.slice(0, n).forEach(([x, y], j) => j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); if (n === 1){ ctx.lineTo(pts[0][0] + .1, pts[0][1]); } ctx.stroke(); };
+  if (!animate || reduced){ strokes.forEach(pts => seg(pts, pts.length)); return; }
+  let si = 0, pi = 1;
+  const tick = () => {
+    if (!cv.isConnected || si >= strokes.length) return;
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    strokes.slice(0, si).forEach(pts => seg(pts, pts.length));
+    seg(strokes[si], pi);
+    pi += 3; if (pi > strokes[si].length){ si++; pi = 1; }
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
+function makePad(cv){
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  let strokes = [], cur = null, total = 0;
+  const redraw = () => drawStrokes(cv, strokes.map(st => st.map(([x, y]) => hx(x / W * 255) + hx(y / H * 255)).join('')).join('|'), false);
+  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
+  cv.onpointerdown = e => { if (total > 1800) return; cv.setPointerCapture(e.pointerId); cur = [pos(e)]; strokes.push(cur); total++; redraw(); };
+  cv.onpointermove = e => { if (!cur) return; const p = pos(e), l = cur[cur.length - 1]; if (Math.hypot(p[0] - l[0], p[1] - l[1]) < W / 90 || total > 1800) return; cur.push(p); total++; redraw(); };
+  const up = () => { cur = null; };
+  cv.onpointerup = up; cv.onpointercancel = up; cv.onpointerleave = up;
+  redraw();
+  return {
+    clear(){ strokes = []; total = 0; redraw(); },
+    undo(){ const s = strokes.pop(); if (s) total -= s.length; redraw(); },
+    empty(){ return !strokes.length; },
+    data(){ return strokes.map(st => st.map(([x, y]) => hx(x / W * 255) + hx(y / H * 255)).join('')).join('|'); }
+  };
+}
+function hydrateDrawings(root){ $$('canvas[data-d]', root || document).forEach(cv => { if (cv.dataset.done) return; cv.dataset.done = 1; drawStrokes(cv, cv.dataset.d, cv.dataset.anim === '1'); }); }
+
 function mqResultHTML(q, r, big){
-  const opts = qOptions(QBY[q.id], q.kind), A = x => esc(opts[x] || '?');
-  let rows;
-  if (q.kind === 'tahmin'){
+  const opts = qOpts(q), A = x => esc(opts[x] || '?');
+  let rows, stamp = r.m ? (q.kind === 'tahmin' || q.kind === 'ciz' ? 'BİLDİ!' : q.kind === 'refleks' ? 'ŞİMŞEK!' : 'EŞLEŞTİ!') : (q.kind === 'refleks' ? 'YAVAŞ' : 'TUTMADI');
+  let extra = '';
+  if (q.kind === 'tahmin' || q.kind === 'ciz'){
     const truth = q.sub === 'irem' ? r.i : r.c, guess = q.sub === 'irem' ? r.c : r.i, gs = other(q.sub);
-    rows = `<div class="ans ${q.sub}"><small>${AV[q.sub]} ${poss(NAMES[q.sub])} cevabı</small><b>${A(truth)}</b></div><div class="ans ${gs}"><small>${AV[gs]} ${poss(NAMES[gs])} tahmini</small><b>${A(guess)}</b></div>`;
+    const l1 = q.kind === 'ciz' ? `${poss(NAMES[q.sub])} kelimesi` : `${poss(NAMES[q.sub])} cevabı`;
+    rows = `<div class="ans ${q.sub}"><small>${AV[q.sub]} ${l1}</small><b>${A(truth)}</b></div><div class="ans ${gs}"><small>${AV[gs]} ${poss(NAMES[gs])} tahmini</small><b>${A(guess)}</b></div>`;
+    if (q.kind === 'ciz' && r.d) extra = `<canvas class="drawthumb" width="300" height="300" data-d="${esc(r.d)}"></canvas>`;
+  } else if (q.kind === 'refleks'){
+    const ms = v => v >= 1500 ? 'erken bastı!' : v + ' ms';
+    rows = `<div class="ans irem"><small>🌸 İrem</small><b>${ms(r.i)}</b></div><div class="ans cengiz"><small>🌊 Cengiz</small><b>${ms(r.c)}</b></div>`;
   } else rows = `<div class="ans irem"><small>🌸 İrem</small><b>${A(r.i)}</b></div><div class="ans cengiz"><small>🌊 Cengiz</small><b>${A(r.c)}</b></div>`;
-  return `<div class="qres ${r.m ? 'ok' : 'no'} ${big ? 'big' : ''}"><div class="qh"><span class="kd">${KIND_NAME[q.kind]}</span><span class="stampres ${r.m ? 'ok' : 'no'}">${r.m ? (q.kind === 'tahmin' ? 'BİLDİ!' : 'EŞLEŞTİ!') : 'TUTMADI'}</span></div>
-    <div class="qq">${esc(qTitle(q))}</div><div class="answers">${rows}</div></div>`;
+  return `<div class="qres ${r.m ? 'ok' : 'no'} ${big ? 'big' : ''}"><div class="qh"><span class="kd">${KIND_NAME2[q.kind]}${q.custom ? ' · ✍️ Sizin sorunuz' : ''}</span><span class="stampres ${r.m ? 'ok' : 'no'}">${stamp}</span></div>
+    <div class="qq">${esc(qTitle(q))}</div>${extra}<div class="answers">${rows}</div></div>`;
 }
 function scoreDots(mq){ return `<div class="dots">${mq.qs.map((_, k) => { const r = mq.res[k]; return `<span class="${r ? (r.m ? 'ok' : 'no') : k === mq.k ? 'cur' : ''}">${r ? (r.m ? '💞' : '✗') : k + 1}</span>`; }).join('')}</div>`; }
+
+function qBodyHTML(q, me){
+  const qv = qView(q, me), opts = qOpts(q);
+  const head = `<div class="lead">${esc(qv.lead)}${q.custom ? ' <span class="tag mid">✍️ Sizin sorunuz</span>' : ''}</div><div class="qtext">${esc(qv.text)}</div>`;
+  if (q.kind === 'refleks') return head + `<div class="reflex" id="rfx" role="button" tabindex="0"><span class="rfx-msg">Hazır olduğunda dokun</span><span class="rfx-big">🎯</span></div>`;
+  if (q.kind === 'ciz' && me === q.sub) return head + `<canvas class="pad" id="pad" width="600" height="600"></canvas><div class="padbar"><button class="btn ghost small" id="padUndo">↶ Geri al</button><button class="btn ghost small" id="padClear">🗑️ Temizle</button></div>`;
+  if (q.kind === 'ciz'){
+    const dr = G.A[q.sub];
+    if (!validAns(dr) || !dr.d) return head + `<div class="waitdraw"><span class="spin"></span> ${esc(NAMES[q.sub])} çiziyor…</div>`;
+    return head + `<canvas class="pad view" id="guessCv" width="600" height="600" data-d="${esc(dr.d)}" data-anim="1"></canvas>
+      <div class="qopts" id="guessReady">${opts.map((o, i) => `<button class="qopt" data-a="${i}">${esc(o)}</button>`).join('')}</div>`;
+  }
+  return head + `<div class="qopts ${q.kind === 'kim' ? 'two' : ''}">${opts.map((o, i) => `<button class="qopt" data-a="${i}">${esc(o)}</button>`).join('')}</div>`;
+}
+let PAD = null;
+function wireQBody(q){
+  hydrateDrawings($('#qc'));
+  $$('.qopt').forEach(b => b.onclick = () => {
+    if (G.readOnly) return toast('Oynama iznin yok.');
+    if (myAns() !== null) return;
+    G.asel = +b.dataset.a; Sound.play('select'); patchMini();
+  });
+  if (q.kind === 'ciz' && q.sub === G.me && $('#pad')){
+    PAD = makePad($('#pad'));
+    $('#padClear').onclick = () => { PAD.clear(); patchMini(); };
+    $('#padUndo').onclick = () => { PAD.undo(); patchMini(); };
+    $('#pad').addEventListener('pointerup', () => patchMini());
+  }
+  if (q.kind === 'refleks') wireReflex();
+}
+function wireReflex(){
+  const el = $('#rfx'); if (!el) return;
+  if (myAns() !== null){ el.classList.add('done'); el.innerHTML = `<span class="rfx-msg">Süren kaydedildi</span><span class="rfx-big">${myAns() >= 1500 ? '😅' : myAns() + ' ms'}</span>`; return; }
+  let state = 'idle', t0 = 0, timer = null;
+  const set = (cls, msg, big) => { el.className = 'reflex ' + cls; el.innerHTML = `<span class="rfx-msg">${msg}</span><span class="rfx-big">${big}</span>`; };
+  const go = () => {
+    if (G.readOnly) return toast('Oynama iznin yok.');
+    if (state === 'idle'){ state = 'wait'; set('wait', 'Bekle… Profesör geliyor…', '⏳'); timer = setTimeout(() => { state = 'now'; t0 = performance.now(); set('now', 'ŞİMDİ! DOKUN!', '🐐'); Sound.play('pop'); }, 1500 + Math.random() * 2500); }
+    else if (state === 'wait'){ clearTimeout(timer); state = 'done'; set('early', 'Çok erken bastın! Ceza süresi yazıldı.', '😅'); Sound.play('bad'); castAns(1500); }
+    else if (state === 'now'){ const ms = Math.min(1499, Math.round(performance.now() - t0)); state = 'done'; set('done', ms < 650 ? 'Şimşek gibi!' : 'Biraz yavaş…', ms + ' ms'); Sound.play(ms < 650 ? 'good' : 'chip'); castAns(ms); }
+  };
+  el.onpointerdown = e => { e.preventDefault(); go(); };
+  el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(); };
+}
 function viewMini(){
   setChrome('game'); updateHUD();
   const P = G.P, sc = S[P.scene], mq = P.mq, k = mq.k, c = ctxOf(P), me = G.me, q = mq.qs[k];
   const sp = SPEAKERS[val(sc.sp, c)] || SPEAKERS.anlatici;
   const ackKey = P.seed + ':' + P.step + ':' + k;
   const needAck = k > 0 && LS.get('mqack', '') !== ackKey;
-  const qv = qView(q, me), opts = qOptions(QBY[q.id], q.kind);
+  PAD = null;
   $('#screen').innerHTML = `${stageHTML(val(sc.art, c), {loc:sc.title, goat:c.has('profesor')}).replace('class="stage"', 'class="stage short"')}
     <section class="panel">
       <div class="speaker"><span class="face">${sp[0]}</span>${esc(sp[1])}</div>
       <div class="scroll" id="mn">
-        <div class="kicker">🎯 Mini oyun · ${needAck ? 'Sonuç' : KIND_NAME[q.kind] + ' · Soru ' + (k + 1) + '/' + mq.qs.length}</div>
+        <div class="kicker">🎯 Mini oyun · ${needAck ? 'Sonuç' : KIND_NAME2[q.kind] + ' · Soru ' + (k + 1) + '/' + mq.qs.length}</div>
         <div class="title">${esc(sc.title)}</div>
         ${scoreDots(mq)}
         ${needAck ? mqResultHTML(mq.qs[k - 1], mq.res[k - 1], true) : `
           ${k === 0 ? `<div class="story" id="mIntro"></div>` : ''}
-          <div class="qcard ${k === 0 ? 'hidden' : ''}" id="qc">
-            <div class="lead">${esc(qv.lead)}</div>
-            <div class="qtext">${esc(qv.text)}</div>
-            <div class="qopts ${q.kind === 'kim' ? 'two' : ''}">${opts.map((o, i) => `<button class="qopt" data-a="${i}">${esc(o)}</button>`).join('')}</div>
-          </div>`}
+          <div class="qcard ${k === 0 ? 'hidden' : ''}" id="qc" data-kind="${q.kind}">${qBodyHTML(q, me)}</div>`}
       </div>
       <div class="actionbar" id="ab"></div>
     </section>`;
   const run = G.run, mn = $('#mn');
-  mn.onclick = e => { if (G.skip && !e.target.closest('.qopt')) G.skip(); };
+  mn.onclick = e => { if (G.skip && !e.target.closest('.qopt,.pad,.reflex,.padbar')) G.skip(); };
   if (needAck){
+    hydrateDrawings(mn);
     const r = mq.res[k - 1];
     Sound.play(r.m ? 'heart' : 'bad'); if (r.m) burst($('.qres'), '💞', 10);
     $('#ab').innerHTML = `<button class="btn" id="nextQ">Sonraki soru ▶</button>`;
     $('#nextQ').onclick = () => { Sound.play('tap'); LS.set('mqack', ackKey); G.view = null; decide(); };
     return;
   }
-  const wire = () => {
-    $$('.qopt').forEach(b => b.onclick = () => {
-      if (G.readOnly) return toast('Oynama iznin yok.');
-      if (myAns() !== null) return;
-      G.asel = +b.dataset.a; Sound.play('select'); patchMini();
-    });
-    patchMini();
-  };
+  const wire = () => { wireQBody(q); patchMini(); };
   if (k === 0){
     const key = P.seed + ':' + P.step + ':intro', already = LS.get('typed', '') === key;
     const show = () => { if (run !== G.run) return; LS.set('typed', key); $('#qc').classList.remove('hidden'); wire(); setTimeout(() => scrollEnd(mn), 60); };
@@ -688,25 +786,40 @@ function viewMini(){
 }
 function patchMini(){
   const ab = $('#ab'); if (!ab || G.view !== 'mini' || !inMini() || $('#nextQ')) return;
-  const ma = myAns(), pa = validAns(G.A[other(G.me)]), op = NAMES[other(G.me)];
+  const P = G.P, q = P.mq.qs[P.mq.k], me = G.me;
+  const ma = myAns(), pa = validAns(G.A[other(me)]), op = NAMES[other(me)];
   const qc = $('#qc');
   if (qc && qc.classList.contains('hidden')){ ab.innerHTML = `<div class="waitbox">📖 Hikâyeyi okuyorsun…</div>`; return; }
+  // tahminci: çizim yeni geldiyse kartı yenile
+  if (qc && q.kind === 'ciz' && me !== q.sub && !$('#guessReady') && validAns(G.A[q.sub]) && G.A[q.sub].d){ qc.innerHTML = qBodyHTML(q, me); wireQBody(q); Sound.play('turn'); scrollEnd($('#mn')); }
   $$('.qopt').forEach(b => { b.classList.toggle('sel', +b.dataset.a === (ma !== null ? ma : G.asel)); b.disabled = ma !== null; });
   if (G.readOnly){ ab.innerHTML = `<div class="waitbox">👀 İzleyici modundasın.</div>`; return; }
+  const waitHTML = txt => `<div class="waitbox"><span class="spin"></span><span>${txt}<br>${esc(op)} bekleniyor…</span></div>`;
+  if (q.kind === 'refleks'){
+    ab.innerHTML = ma === null ? `<div class="waitbox">⚡ <span>Kutucuğa dokun, bekle ve Profesör çıkınca hemen bas!${pa ? ` <b>${op}</b> süresini kaydetti.` : ''}</span></div>` : waitHTML(`Süren: <b>${ma >= 1500 ? 'erken bastın' : ma + ' ms'}</b>`);
+    return;
+  }
+  if (q.kind === 'ciz' && me === q.sub){
+    if (ma === null){
+      ab.innerHTML = `<div class="waitbox" style="flex:1.2">🎨 <span>Çizimini bitirince gönder. ${op} çizimini izleyip tahmin edecek.</span></div>
+        <button class="btn violet small" id="drawBtn" ${(!PAD || PAD.empty() || G.answering) ? 'disabled' : ''}>📤 Gönder</button>`;
+      $('#drawBtn').onclick = () => { if (PAD && !PAD.empty()) castAns(q.c, {d:PAD.data()}); };
+    } else ab.innerHTML = waitHTML(`Çizimin gönderildi: <b>${esc(q.t)}</b>`);
+    return;
+  }
+  if (q.kind === 'ciz' && !$('#guessReady')){ ab.innerHTML = `<div class="waitbox">🎨 <span>${esc(NAMES[q.sub])} çizimini bitirince burada belirecek.</span></div>`; return; }
   if (ma === null){
     ab.innerHTML = `<div class="waitbox" style="flex:1.2">${pa ? `✅ <span><b>${op}</b> cevapladı. Sıra sende!</span>` : `🤔 <span>Cevabını seç ve kilitle. ${op} göremez.</span>`}</div>
       <button class="btn violet small" id="ansBtn" ${G.asel === null || G.answering ? 'disabled' : ''}>🔒 Kilitle</button>`;
     $('#ansBtn').onclick = () => { if (G.asel !== null) castAns(G.asel); };
-  } else {
-    const opts = qOptions(QBY[G.P.mq.qs[G.P.mq.k].id], G.P.mq.qs[G.P.mq.k].kind);
-    ab.innerHTML = `<div class="waitbox"><span class="spin"></span><span>Cevabın: <b>${esc(opts[ma])}</b><br>${esc(op)} bekleniyor…</span></div>`;
-  }
+  } else ab.innerHTML = waitHTML(`Cevabın: <b>${esc(qOpts(q)[ma] || '')}</b>`);
+  if (q.kind === 'refleks') wireReflex();
 }
-async function castAns(a){
+async function castAns(a, extra){
   const P = G.P;
   if (!inMini() || G.readOnly || G.answering || myAns() !== null) return;
   G.answering = true; patchMini();
-  try { await G.aref[G.me].set({step:P.step, k:P.mq.k, a}); Sound.play('lock'); }
+  try { await G.aref[G.me].set(Object.assign({step:P.step, k:P.mq.k, a}, extra || {})); Sound.play('lock'); }
   catch(e){ writeErr(e); }
   G.answering = false; patchMini(); updatePlayers();
   tryAdvance();
@@ -732,7 +845,7 @@ function viewRevealMini(){
     // önceki sorular küçük, son soru büyük ve sesli
     if (lastK > 0) add(`<div class="minisum">${L.qs.slice(0, lastK).map((q, k) => `<span class="${L.res[k].m ? 'ok' : 'no'}">${L.res[k].m ? '💞' : '✗'} ${esc(qTitle(q))}</span>`).join('')}</div>`);
     await beat(500); if (!alive()) return;
-    const el = add(mqResultHTML(L.qs[lastK], L.res[lastK], true));
+    const el = add(mqResultHTML(L.qs[lastK], L.res[lastK], true)); hydrateDrawings(el);
     Sound.play(L.res[lastK].m ? 'heart' : 'bad'); if (L.res[lastK].m) burst(el, '💞', 10);
     await beat(900); if (!alive()) return;
     const perfect = L.matches === L.total;
@@ -756,7 +869,7 @@ function viewRevealMini(){
       }
     }
     G.fast = false;
-    const toEnd = L.next === 'end', nextCh = !toEnd && S[L.next] && S[L.next].ch !== sc.ch;
+    const toEnd = L.next === 'end', nextCh = !toEnd && S[L.next] && chOf(L.next, P) !== chOf(L.scene, P);
     $('#ab').innerHTML = `<button class="btn ${toEnd ? 'gold' : ''}" id="contBtn">${toEnd ? '🏁 Sonu gör' : nextCh ? '📖 Yeni bölüme geç ▶' : 'Devam ▶'}</button>`;
     $('#contBtn').onclick = () => { Sound.play('tap'); markSeen(P); G.view = null; decide(); };
     scrollEnd(rv);
@@ -902,7 +1015,7 @@ function viewReveal(){
     if (!alive()) return;
     G.fast = false;
     const toEnd = L.next === 'end';
-    const nextCh = !toEnd && S[L.next] && S[L.next].ch !== sc.ch;
+    const nextCh = !toEnd && S[L.next] && chOf(L.next, P) !== chOf(L.scene, P);
     $('#ab').innerHTML = `<button class="btn ${toEnd ? 'gold' : ''}" id="contBtn">${toEnd ? '🏁 Sonu gör' : nextCh ? '📖 Yeni bölüme geç ▶' : 'Devam ▶'}</button>`;
     $('#contBtn').onclick = () => { Sound.play('tap'); markSeen(P); G.view = null; decide(); };
     $('#contBtn').focus({preventScroll:true});
@@ -916,6 +1029,16 @@ function viewEnding(){
   const P = G.P, E = ENDINGS[P.ending] || ENDINGS.klasik, run = G.run;
   const isNew = !LS.get('endSeen:' + P.seed, false);
   const f = foundList();
+  // albüm kaydı + yeni rozetler
+  const entry = albumEntry(P);
+  const prevA = albumList().filter(g => g.seed !== P.seed);
+  const prevF = f.filter(k => k !== P.ending || prevA.some(g => g.ending === k));
+  const before = earnedBadges(prevA, prevF), after = earnedBadges(prevA.concat([entry]), f);
+  const newB = after.filter(k => !before.includes(k));
+  if (!((G.ALB && G.ALB.games) || []).some(g => g.seed === P.seed) && G.albref && !G.readOnly){
+    const games = ((G.ALB && G.ALB.games) || []).concat([entry]).slice(-200);
+    G.albref.set({games}).then(() => { G.ALB = {games}; }).catch(() => {});
+  }
   $('#screen').innerHTML = `<div class="scroll" style="background:radial-gradient(circle at 50% 0%, #3d2a7a, var(--night) 60%)"><div class="ending" id="endc">
       <div class="medal">${E.i}</div>
       <div class="en">Son ${ENDING_ORDER.indexOf(P.ending) + 1} / ${ENDING_ORDER.length}</div>
@@ -924,6 +1047,9 @@ function viewEnding(){
       <div class="sumrow"><div class="sum"><b>${P.uyum}</b><span>💞 Uyum</span></div><div class="sum"><b>${P.kaos}</b><span>🌪️ Kaos</span></div><div class="sum"><b>${P.mqMatch || 0}/${P.mqTotal || 0}</b><span>🎯 Mini</span></div><div class="sum"><b>${P.log.length}</b><span>🎬 Hamle</span></div></div>
       <div id="emis"></div>
       <div id="erest" class="hidden">
+        ${newB.length ? `<h3>🏅 Yeni rozet${newB.length > 1 ? 'ler' : ''}!</h3><div class="newbadges">${newB.map(k => `<div class="badge on pop"><span class="bi">${BADGES[k].i}</span><b>${esc(BADGES[k].t)}</b><small>${esc(BADGES[k].d)}</small></div>`).join('')}</div>` : ''}
+        <div class="row" style="display:flex;gap:10px;margin-top:16px"><button class="btn violet" id="eCard" style="flex:1">🖼️ Anı kartı</button></div>
+        <div class="row" style="display:flex;gap:10px;margin-top:10px"><button class="btn ghost small" id="eAlb" style="flex:1">📔 Maceralarımız</button><button class="btn ghost small" id="eBdg" style="flex:1">🏅 Rozetler</button></div>
         <h3>🏆 Sonlar galerisi · ${f.length}/${ENDING_ORDER.length}</h3>
         <div class="gallery">${ENDING_ORDER.map(k => f.includes(k) ? `<div class="gal on ${k === P.ending ? 'new' : ''}"><span class="e">${ENDINGS[k].i}</span>${esc(ENDINGS[k].t)}</div>` : `<div class="gal"><span class="e">❓</span><small>${esc(ENDINGS[k].h)}</small></div>`).join('')}</div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
@@ -953,6 +1079,10 @@ function viewEnding(){
     $('#erest').classList.remove('hidden'); LS.set('endSeen:' + P.seed, true);
     $('#eNew').onclick = () => confirmBox('Yeni macera başlasın mı?', 'İkiniz için de yeni bir oyun başlar. Bulduğunuz sonlar galeride kalır.', startGame);
     $('#eLog').onclick = () => openSheet('yolculuk');
+    $('#eCard').onclick = () => openCard();
+    $('#eAlb').onclick = () => openSheet('album');
+    $('#eBdg').onclick = () => openSheet('rozetler');
+    if (newB.length && isNew){ Sound.play('win'); confetti(40); }
   })();
 }
 
@@ -997,6 +1127,9 @@ const SHEETS = {
       return e.i === e.c ? `<div class="tl"><b>${esc(s.title)}</b><span>💞 Birlikte: ${nm(e.i)}${res}</span></div>`
         : `<div class="tl dis"><b>${esc(s.title)}</b><span>${e.m === 'ikna' ? '🤝' : '⚔️'} İrem: ${nm(e.i)} · Cengiz: ${nm(e.c)} → ${nm(e.a)} ${e.m === 'ikna' ? '(' + NAMES[e.by] + ' ikna oldu)' : e.m === 'rps' ? '(taş-kağıt-makas)' : e.m === 'zar' ? '(zarla)' : ''}${res}</span></div>`; }).join('')}</div>`;
   }],
+  sorular:['✍️ Kendi sorularımız', sheetSorular],
+  album:['📔 Maceralarımız', sheetAlbum],
+  rozetler:['🏅 Rozetler', sheetRozetler],
   galeri:['🏆 Sonlar galerisi', () => {
     const f = foundList();
     return `<p style="font-size:14px;color:var(--soft);margin-top:0">${f.length}/${ENDING_ORDER.length} son bulundu. Kilitli sonların altında küçük birer ipucu var.</p>
@@ -1009,6 +1142,10 @@ const SHEETS = {
       <li><b>Yetenek kontrolleri:</b> 🎲 işaretli seçeneklerde başarı ya da başarısızlık sizi farklı yollara götürür. Kartta başarı olasılığı yazar.</li>
       <li><b>Strateji:</b> taş-kağıt-makası kazanan işi <i>tek başına</i> yapar, katılırsan <i>ikinizin gücü</i> toplanır. Zor işlerde katılmak bazen daha akıllıcadır.</li>
       <li><b>Mini oyunlar:</b> hikâyenin içinde "Tahmin et", "Kim daha çok?" ve "Aynı anda" turları var. Ne kadar çok eşleşirseniz o kadar avantaj kazanırsınız.</li>
+      <li><b>Mini oyun türleri:</b> Tahmin et, Kim daha çok?, Aynı anda, 🎨 Çiz-bil ve ⚡ Refleks.</li>
+      <li><b>✍️ Kendi sorularınız:</b> Ana menüden kendi sorularınızı yazın; sonraki maceralarda karşınıza çıkar.</li>
+      <li><b>⚡ Sürpriz olaylar:</b> Yolda rastgele olaylar çıkabilir. Her oyun biraz farklı geçer.</li>
+      <li><b>🏅 Rozetler ve 📔 albüm:</b> Biten her oyun albüme yazılır; oyunlar boyunca rozet toplarsınız.</li>
       <li><b>Kasabayı Keşfet:</b> festivalden önce beş mekândan sadece üçünü gezebilirsiniz. Her mekânda başka bir şey sizi bekliyor.</li>
       <li><b>Özellikler büyür:</b> bir şeyi seçtikçe o özelliğin artar. Süper gücün baştan +2 verir.</li>
       <li><b>Eşyalar ve dostluklar</b> 🔒 kilitli seçenekleri açar. Kilidin üstünde neyin eksik olduğu yazar.</li>
@@ -1027,22 +1164,150 @@ const SHEETS = {
       <div style="display:flex;flex-direction:column;gap:10px">
         <button class="btn ghost" data-act="how">📖 Nasıl oynanır</button>
         <button class="btn ghost" data-act="galeri">🏆 Sonlar galerisi</button>
+        <button class="btn ghost" data-act="sorular">✍️ Kendi sorularımız</button>
+        <button class="btn ghost" data-act="album">📔 Maceralarımız</button>
+        <button class="btn ghost" data-act="rozetler">🏅 Rozetler</button>
         ${isGame(G.P) ? `<button class="btn" data-act="new" ${G.readOnly ? 'disabled' : ''}>↺ Yeni macera başlat</button>` : ''}
       </div>
       ${window.__BUILD ? `<p style="text-align:center;font-size:12px;color:var(--soft);margin:16px 0 0">Sürüm ${esc(window.__BUILD)}</p>` : ''}`]
 };
-function openSheet(name){
+// ---------- kendi sorularımız, albüm, rozetler ----------
+const CQ_KIND = {tahmin:['🔮','Beni ne kadar tanıyorsun?','Kendinle ilgili bir soru yaz. Sen cevaplayacaksın, partnerin tahmin edecek.'],
+  kim:['🙋','Kim daha çok?','İkiniz de "İrem" ya da "Cengiz" diye cevaplarsınız.'],
+  ayni:['💞','İkimiz hakkında','İkinize de aynı soru gelir. Aynı cevabı verirseniz puan.']};
+let cqDraft = {kind:'tahmin', t:'', o:['', '', '', '']};
+function sheetSorular(){
+  const list = (G.C && G.C.qs) || [];
+  const k = cqDraft.kind;
+  return `<p style="font-size:14px;color:var(--soft);margin-top:0">Yazdığınız sorular, <b>sonraki yeni maceralarda</b> mini oyunlarda genel soruların arasına karışır. ${list.length}/60 soru.</p>
+    <div class="sec">Yeni soru</div>
+    <div class="seg cqk">${Object.keys(CQ_KIND).map(x => `<button data-cqk="${x}" class="${x === k ? 'on' : ''}">${CQ_KIND[x][0]} ${CQ_KIND[x][1]}</button>`).join('')}</div>
+    <p style="font-size:13px;color:var(--soft);margin:-4px 0 8px">${CQ_KIND[k][2]}</p>
+    <input class="cqin" id="cqT" maxlength="90" placeholder="${k === 'tahmin' ? 'Örn. En sevdiğim tatlı hangisi?' : k === 'kim' ? 'Örn. Kim daha çok sabah huysuzdur?' : 'Örn. İlk buluşmamızda ne yedik?'}" value="${esc(cqDraft.t)}">
+    ${k === 'kim' ? '' : `<div class="cqopts">${[0,1,2,3].map(i => `<input class="cqin" data-cqo="${i}" maxlength="40" placeholder="${i < 2 ? 'Seçenek ' + (i + 1) : 'Seçenek ' + (i + 1) + ' (isteğe bağlı)'}" value="${esc(cqDraft.o[i] || '')}">`).join('')}</div>`}
+    <button class="btn teal" id="cqSave" style="width:100%;margin-top:10px">➕ Soruyu ekle</button>
+    <div class="sec">Sorularınız</div>
+    ${list.length ? list.slice().reverse().map(q => `<div class="itemrow"><span class="ie">${CQ_KIND[q.kind] ? CQ_KIND[q.kind][0] : '❓'}</span><div style="flex:1"><b>${esc(q.t)}</b><span>${AV[q.by] || ''} ${esc(NAMES[q.by] || '')} yazdı${q.o && q.kind !== 'kim' ? ' · ' + q.o.map(esc).join(' / ') : ''}</span></div>${q.by === G.me ? `<button class="closeb" data-cqdel="${esc(q.id)}" aria-label="Sil">🗑️</button>` : ''}</div>`).join('') : `<div class="empty">✍️<br>Henüz soru yok. İlk soruyu siz yazın!</div>`}`;
+}
+function wireSorular(){
+  $$('[data-cqk]').forEach(b => b.onclick = () => { cqDraft.kind = b.dataset.cqk; openSheet('sorular', true); });
+  const t = $('#cqT'); if (t) t.oninput = () => { cqDraft.t = t.value; };
+  $$('[data-cqo]').forEach(i => i.oninput = () => { cqDraft.o[+i.dataset.cqo] = i.value; });
+  const sv = $('#cqSave'); if (sv) sv.onclick = async () => {
+    const tt = (cqDraft.t || '').trim(), opts = cqDraft.o.map(x => (x || '').trim()).filter(Boolean);
+    if (tt.length < 4) return toast('Soruyu yazmayı unuttun.');
+    if (cqDraft.kind !== 'kim' && opts.length < 2) return toast('En az iki seçenek yaz.');
+    const list = ((G.C && G.C.qs) || []).slice();
+    if (list.length >= 60) return toast('En fazla 60 soru ekleyebilirsiniz.');
+    list.push({id:'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:cqDraft.kind, by:G.me, t:tt, o:cqDraft.kind === 'kim' ? null : opts.slice(0, 4)});
+    try { await G.cref.set({qs:list}); G.C = {qs:list}; cqDraft = {kind:cqDraft.kind, t:'', o:['', '', '', '']}; Sound.play('good'); toast('Soru eklendi! Sonraki macerada karşınıza çıkabilir.'); openSheet('sorular', true); }
+    catch(e){ writeErr(e); }
+  };
+  $$('[data-cqdel]').forEach(b => b.onclick = async () => {
+    const list = ((G.C && G.C.qs) || []).filter(q => q.id !== b.dataset.cqdel);
+    try { await G.cref.set({qs:list}); G.C = {qs:list}; openSheet('sorular', true); } catch(e){ writeErr(e); }
+  });
+}
+function albumList(extra){
+  const seen = new Set(), out = [];
+  [...(((G.ALB && G.ALB.games) || [])), ...(extra ? [extra] : [])].forEach(g => { if (g && g.seed !== undefined && !seen.has(g.seed)){ seen.add(g.seed); out.push(g); } });
+  return out.sort((a, b) => (a.at || 0) - (b.at || 0));
+}
+const fmtDate = t => { try { return new Date(t).toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'}); } catch(e){ return ''; } };
+function sheetAlbum(){
+  const A = albumList().slice().reverse();
+  if (!A.length) return `<div class="empty">📔<br>Henüz biten bir maceranız yok. İlk oyununuzu bitirince burada birikmeye başlayacak.</div>`;
+  return `<p style="font-size:14px;color:var(--soft);margin-top:0">${A.length} macera birlikte tamamlandı.</p>` + A.map((g, i) => { const E = ENDINGS[g.ending] || ENDINGS.klasik;
+    return `<div class="albcard"><div class="albe">${E.i}</div><div style="flex:1;min-width:0"><b>${A.length - i}. ${esc(E.t)}</b><span>${esc(fmtDate(g.at))}</span>
+      <div class="tags" style="margin-top:6px"><span class="tag">💞 ${g.uyum}</span><span class="tag">🌪️ ${g.kaos}</span><span class="tag">🎯 ${g.mm}/${g.mt}</span><span class="tag">🎬 ${g.moves}</span>
+      <span class="tag ${g.mis && g.mis.irem ? 'good' : ''}">🌸 görev ${g.mis && g.mis.irem ? '✅' : '❌'}</span><span class="tag ${g.mis && g.mis.cengiz ? 'good' : ''}">🌊 görev ${g.mis && g.mis.cengiz ? '✅' : '❌'}</span></div></div></div>`; }).join('');
+}
+function sheetRozetler(){
+  const A = albumList(), F = foundList(), E = earnedBadges(A, F);
+  return `<p style="font-size:14px;color:var(--soft);margin-top:0">${E.length}/${BADGE_ORDER.length} rozet kazanıldı.</p><div class="badges">${BADGE_ORDER.map(k => { const b = BADGES[k], on = E.includes(k);
+    return `<div class="badge ${on ? 'on' : ''}"><span class="bi">${on ? b.i : '🔒'}</span><b>${esc(b.t)}</b><small>${esc(b.d)}</small></div>`; }).join('')}</div>`;
+}
+
+// ---------- anı kartı ----------
+function cardHighlights(P){
+  const out = [];
+  const e0 = P.log[0];
+  if (e0 && e0.scene === 'karakter') out.push(`⚡ Süper güçler: İrem ${S.karakter.choices[e0.i].t}, Cengiz ${S.karakter.choices[e0.c].t}`);
+  const dis = P.log.filter(e => (e.m === 'rps' || e.m === 'ikna' || e.m === 'zar') && S[e.scene] && S[e.scene].choices[e.a]);
+  if (dis.length){ const e = dis[dis.length - 1], s = S[e.scene]; out.push(`${e.m === 'ikna' ? '🤝' : '⚔️'} ${s.title}: ${e.m === 'ikna' ? NAMES[e.by] + ' ikna oldu' : 'kavga çıktı'} → ${s.choices[e.a].s}`); }
+  const minis = P.log.filter(e => e.mini);
+  if (minis.length){ const best = minis.slice().sort((a, b) => b.mm / b.mt - a.mm / a.mt)[0]; out.push(`🎯 En iyi mini oyun: ${S[best.scene].title} (${best.mm}/${best.mt})`); }
+  const mi = PL.map(p => `${NAMES[p]} ${MISSIONS[P.missions[p]] && MISSIONS[P.missions[p]].ok(P, p) ? '✅' : '❌'}`).join(' · ');
+  out.push(`🤫 Gizli görevler: ${mi}`);
+  return out;
+}
+function wrapText(ctx, text, x, y, maxW, lh, maxLines){
+  const words = text.split(' '); let line = '', n = 0;
+  for (const w of words){ const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line){ ctx.fillText(line, x, y); y += lh; line = w; if (++n >= maxLines - 1){ break; } } else line = t; }
+  if (line) ctx.fillText(line, x, y); return y + lh;
+}
+function makeCard(P){
+  const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const c = cv.getContext('2d'), E = ENDINGS[P.ending] || ENDINGS.klasik;
+  const fh = (w, s) => `${w} ${s}px Fredoka, "Baloo 2", system-ui, sans-serif`, fb = (w, s) => `${w} ${s}px Nunito, system-ui, sans-serif`;
+  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#2a1760'); g.addColorStop(.55, '#7c3aa8'); g.addColorStop(1, '#ff6f91'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  for (let i = 0; i < 70; i++){ c.fillStyle = `rgba(255,255,255,${.15 + (i % 5) * .1})`; c.beginPath(); c.arc((i * 137.5) % W, (i * 71.3) % (H * .55), 2 + (i % 3), 0, 7); c.fill(); }
+  c.textAlign = 'center'; c.fillStyle = '#ffd56a'; c.font = fh(700, 40); c.fillText('ORTANOKTA MACERASI', W / 2, 110);
+  c.fillStyle = '#fff'; c.font = fb(700, 34); c.fillText('🌸 İrem & Cengiz 🌊', W / 2, 165);
+  c.fillStyle = 'rgba(255,255,255,.14)'; c.beginPath(); c.arc(W / 2, 370, 150, 0, 7); c.fill();
+  c.fillStyle = '#ffc94a'; c.beginPath(); c.arc(W / 2, 370, 120, 0, 7); c.fill();
+  c.font = '130px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; c.fillText(E.i, W / 2, 420);
+  c.fillStyle = '#ffd56a'; c.font = fh(600, 30); c.fillText(`SON ${ENDING_ORDER.indexOf(P.ending) + 1} / ${ENDING_ORDER.length}`, W / 2, 575);
+  c.fillStyle = '#fff'; c.font = fh(700, 74); c.fillText(E.t, W / 2, 660);
+  const stats = [['💞', P.uyum, 'Uyum'], ['🌪️', P.kaos, 'Kaos'], ['🎯', `${P.mqMatch || 0}/${P.mqTotal || 0}`, 'Mini oyun'], ['🎬', P.log.length, 'Hamle']];
+  stats.forEach(([ic, v, l], i) => { const x = 140 + i * 267, y = 720; c.fillStyle = 'rgba(255,255,255,.16)'; c.beginPath(); c.roundRect ? c.roundRect(x - 115, y, 230, 150, 26) : c.rect(x - 115, y, 230, 150); c.fill();
+    c.fillStyle = '#fff'; c.font = fh(700, 52); c.fillText(`${v}`, x, y + 75); c.font = fb(700, 26); c.fillStyle = '#f3e6ff'; c.fillText(`${ic} ${l}`, x, y + 120); });
+  c.fillStyle = '#fffaf1'; c.beginPath(); c.roundRect ? c.roundRect(70, 910, W - 140, 330, 34) : c.rect(70, 910, W - 140, 330); c.fill();
+  c.textAlign = 'left'; c.fillStyle = '#2e2140'; c.font = fb(800, 31); let y = 975;
+  cardHighlights(P).slice(0, 4).forEach(t => { y = wrapText(c, t, 110, y, W - 220, 40, 2) + 18; });
+  c.textAlign = 'center'; c.fillStyle = 'rgba(255,255,255,.9)'; c.font = fb(700, 28);
+  c.fillText(`${fmtDate(Date.now())}${window.__STANDALONE ? ' · khimaria333.github.io/ortanokta' : ''}`, W / 2, 1300);
+  return cv;
+}
+async function openCard(){
+  const P = G.P; if (!isGame(P) || P.scene !== 'end') return;
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e){}
+  const cv = makeCard(P);
+  const url = cv.toDataURL('image/png');
+  $('#sheetTitle').textContent = '🖼️ Anı kartı';
+  $('#sheetBody').innerHTML = `<img src="${url}" alt="Anı kartı" class="cardimg">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+      <button class="btn" id="cardShare">📤 Paylaş ya da kaydet</button>
+      <p class="sub" style="text-align:center;margin:0;font-size:12.5px;color:var(--soft)">Paylaş düğmesi çalışmazsa görsele basılı tutup "Fotoğraflara kaydet" diyebilirsin.</p>
+    </div>`;
+  $('#sheet').classList.add('on');
+  $('#cardShare').onclick = () => {
+    cv.toBlob(async blob => {
+      if (!blob) return toast('Görsel hazırlanamadı.');
+      const file = new File([blob], 'ortanokta-ani-karti.png', {type:'image/png'});
+      try {
+        if (navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Ortanokta Macerası', text:'Ortanokta maceramız 🎈🐐'}); return; }
+      } catch(e){ if (e && e.name === 'AbortError') return; }
+      try { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ortanokta-ani-karti.png'; document.body.appendChild(a); a.click(); a.remove(); toast('Görsel indirildi.'); }
+      catch(e){ toast('Görsele basılı tutup kaydedebilirsin.'); }
+    }, 'image/png');
+  };
+}
+
+function openSheet(name, keep){
   const s = SHEETS[name]; if (!s) return;
-  Sound.play('tap');
+  if (!keep) Sound.play('tap');
   $('#sheetTitle').textContent = s[0];
   $('#sheetBody').innerHTML = s[1]();
   $('#sheet').classList.add('on');
   $('#react').classList.remove('on');
+  if (name === 'sorular') wireSorular();
   $$('[data-snd]').forEach(b => b.onclick = () => { Sound.on = b.dataset.snd === '1'; LS.set('sound', Sound.on); if (Sound.on) Sound.play('select'); openSheet('ayarlar'); updateHUD(); });
   $$('[data-me]').forEach(b => b.onclick = () => { closeSheet(); setMe(b.dataset.me); });
   $$('[data-act]').forEach(b => b.onclick = () => {
     const a = b.dataset.act;
     if (a === 'new') confirmBox('Yeni macera başlasın mı?', 'Şu anki oyun ikiniz için de sıfırlanır. Bulduğunuz sonlar galeride kalır.', startGame);
+    else if (a === 'sorular' || a === 'album' || a === 'rozetler'){ openSheet(a); }
     else if (a === 'share') window.__room.share().then(r => { if (r === 'copied') toast('Link panoya kopyalandı.'); else if (r === 'fail') toast('Oda kodu: ' + window.__room.code); });
     else if (a === 'leave') confirmBox('Odadan çıkılsın mı?', 'Oyun silinmez; aynı kodla istediğin zaman geri dönebilirsin.', () => window.__room.leave());
     else openSheet(a);
@@ -1076,7 +1341,7 @@ async function startGame(){
       const fresh = isGame(d) && d.scene === 'karakter' && d.log.length === 0 && d.step > seen;
       if (!fresh){
         const prev = d ? Object.assign({}, d, {found:(d.found || G.found)}) : {found:G.found};
-        await G.ref.set(newGame(prev));
+        await G.ref.set(newGame(prev, (G.C && Array.isArray(G.C.qs)) ? G.C.qs : []));
       }
     } else toast('Partnerin şu an oyunu başlatıyor…');
   } catch(e){ writeErr(e); }
@@ -1170,6 +1435,9 @@ function bootMsg(html){ $('#screen').innerHTML = `<div class="full" style="backg
   G.vref = {irem:db.doc(PATH.vote('irem')), cengiz:db.doc(PATH.vote('cengiz'))};
   G.tref = {irem:db.doc(PATH.hand('irem')), cengiz:db.doc(PATH.hand('cengiz'))};
   G.aref = {irem:db.doc(PATH.ans('irem')), cengiz:db.doc(PATH.ans('cengiz'))};
+  G.cref = db.doc(PATH.custom); G.albref = db.doc(PATH.album);
+  G.cref.onSnapshot(snap => { const d = snap.exists ? snap.data() : null; G.C = {qs:(d && Array.isArray(d.qs)) ? d.qs.filter(q => q && q.id && q.t) : []}; }, () => {});
+  G.albref.onSnapshot(snap => { const d = snap.exists ? snap.data() : null; G.ALB = {games:(d && Array.isArray(d.games)) ? d.games : []}; }, () => {});
 
   const slow = setTimeout(() => { if (!G.ready) bootMsg(`<div style="font-size:54px">📡</div><p style="color:#cfc4ea;font-weight:700">Bağlantı yavaş. Biraz bekle…</p>`); }, 10000);
   const check = () => {

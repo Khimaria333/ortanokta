@@ -45,7 +45,7 @@ const SPEAKERS = {
 
 const MISSIONS = {
   m1:{t:'Altın Turşu Kupası\'nı kazan.', ok:P=>P.inv.includes('altin')},
-  m2:{t:'Ramazan Abi ile kanka ol (❤️ 4+).', ok:P=>(P.npc.ramazan||0)>=4},
+  m2:{t:'Ramazan Abi ile can ciğer ol (❤️ 5).', ok:P=>(P.npc.ramazan||0)>=5},
   m3:{t:'En az 3 anlaşmazlığı sen kazan.', ok:(P,p)=>P.wins[p]>=3},
   m4:{t:'Hiç sıcak hava balonuna binmeden oyunu bitir.', ok:P=>!P.flags.rode},
   m5:{t:'Kaos puanını en az 7 yap.', ok:P=>P.kaos>=7},
@@ -53,10 +53,10 @@ const MISSIONS = {
   m7:{t:'14 kediyle dost ol (❤️ 2+).', ok:P=>(P.npc.kediler||0)>=2},
   m8:{t:'Gizli turşu tarifini ele geçir.', ok:P=>P.inv.includes('tarif') || !!P.flags.tarifVar},
   m9:{t:'En az bir kez hapse gir.', ok:P=>!!P.flags.jailed},
-  m10:{t:'Kendi özelliklerinden birini 7\'ye çıkar.', ok:(P,p)=>Math.max(...Object.values(P.stats[p]))>=7},
+  m10:{t:'Kendi özelliklerinden birini 8\'e çıkar.', ok:(P,p)=>Math.max(...Object.values(P.stats[p]))>=8},
   m11:{t:'Kayıp efsane çift Fikriye ile Necmi\'yi bul.', ok:P=>!!P.flags.metNecmi},
   m12:{t:'Uyum puanını en az 12 yap.', ok:P=>P.uyum>=12},
-  m13:{t:'Mini oyunlarda toplam en az 7 eşleşme yap.', ok:P=>(P.mqMatch||0)>=7},
+  m13:{t:'Mini oyunlarda toplam en az 9 eşleşme yap.', ok:P=>(P.mqMatch||0)>=9},
   m14:{t:'Kasabada bir Polaroid fotoğraf çektir.', ok:P=>P.inv.includes('foto')},
   m15:{t:'Kasabadaki gezide eski değirmene git.', ok:P=>!!P.flags.v_degirmen}
 };
@@ -556,17 +556,17 @@ kutuphane:{ch:2, title:'Kasaba Kütüphanesi', art:'kutuphane', sp:'saadet', onE
  ]},
 
 isinma:{ch:3, title:'Çiftler Isınma Turu', art:'festival', sp:'sunucu', choices:[],
- mini:{qs:[['kim'],['kim'],['kim']],
-  intro:`Meydanda mikrofon cızırdıyor. Sunucu Necati sahnede:<br><br><i>"Festivale çiftler ısınma turuyla başlıyoruz! Kurallar basit: soruyorum, ikiniz de aynı anda cevaplıyorsunuz. KİM DAHA ÇOK…?"</i>`,
+ mini:{qs:[['kim'],['ciz','irem'],['kim'],['ciz','cengiz']],
+  intro:`Meydanda mikrofon cızırdıyor. Sunucu Necati sahnede:<br><br><i>"Festivale çiftler ısınma turuyla başlıyoruz! İki oyunumuz var: önce soruyorum, ikiniz de aynı anda cevaplıyorsunuz. KİM DAHA ÇOK…? Sonra da çizim yarışması: biriniz çizecek, öbürü bilecek!"</i>`,
   reward:(m, n) => m === n
-   ? {fx:{flag:{juri:1}, npc:{gulizar:1}, uyum:1}, text:`Üçte üç! Sunucu Necati mikrofonu düşürüyor. Jüri üyeleri birbirine bakıp not alıyor ve ön sıradaki Gülizar Hanım bile alkışlıyor. Jürinin gözüne girdiniz.`}
-   : m >= 2 ? {fx:{flag:{juri:1}}, text:`"Fena değil!" diye bağırıyor Necati. Jüri masasındakiler size gülümsüyor; turşu yarışmasında bu işinize yarayabilir.`}
+   ? {fx:{flag:{juri:1}, npc:{gulizar:1}, uyum:1}, text:`Hepsini bildiniz! Sunucu Necati mikrofonu düşürüyor. Jüri üyeleri birbirine bakıp not alıyor ve ön sıradaki Gülizar Hanım bile alkışlıyor. Jürinin gözüne girdiniz.`}
+   : m >= Math.ceil(n / 2) ? {fx:{flag:{juri:1}}, text:`"Fena değil!" diye bağırıyor Necati. Jüri masasındakiler size gülümsüyor; turşu yarışmasında bu işinize yarayabilir.`}
    : {fx:null, text:`Seyirciler kahkahalarla gülüyor. Necati "Bu çift daha birbirini keşfediyor!" diyor. En azından herkes sizi tanıdı.`}},
  go:'festival'},
 
 cift_testi:{ch:5, title:'Gerçek Çift Testi', art:'mahkeme', sp:'nurten', choices:[],
- mini:{qs:[['ayni'],['tahmin','irem'],['tahmin','cengiz']],
-  intro:`Ötenokta meydanı. Başkan Tahsin sizi gösterip "Ortanoktalı casuslar!" diye bağırıyor ve meydanda bir mahkeme kuruluyor. Yargıç eczacı Nurten Hanım gözlüğünü indiriyor:<br><br><i>"Önce şunu görelim: gerçekten çift misiniz, yoksa sahte mi? Gerçek çiftler aynı cevapları verir. Ayrı ayrı cevaplayın!"</i>`,
+ mini:{qs:[['ayni'],['tahmin','irem'],['refleks'],['tahmin','cengiz']],
+  intro:`Ötenokta meydanı. Başkan Tahsin sizi gösterip "Ortanoktalı casuslar!" diye bağırıyor ve meydanda bir mahkeme kuruluyor. Yargıç eczacı Nurten Hanım gözlüğünü indiriyor:<br><br><i>"Önce şunu görelim: gerçekten çift misiniz, yoksa sahte mi? Gerçek çiftler aynı cevapları verir ve aynı anda tepki verir. Ayrı ayrı cevaplayın!"</i>`,
   reward:(m, n) => ({fx:{flag:{test:m}, uyum:m === n ? 1 : 0},
    text: m === n ? `Nurten Hanım test kâğıdını havaya kaldırıyor: "Kusursuz! Bunlar gerçek bir çift." Meydanda bir mırıltı dolaşıyor. Dava sizin için çok daha kolay geçecek.`
      : m >= 1 ? `Nurten Hanım kaşlarını kaldırıyor: "Hmm. ${m} doğru. Sahte çift değilsiniz ama… göreceğiz." Dava biraz daha kolay geçecek.`
@@ -602,7 +602,7 @@ function evalEnding(P){
   if (f('velayet') && has('profesor')) return 'keci';
   if (f('sampiyon') && f('tursuPasta')) return 'tursu';
   if (f('alias') && f('metNecmi') && n('necmi')>=2) return 'varis';
-  if ((P.mqMatch||0) >= 9) return 'bilgin';
+  if ((P.mqMatch||0) >= 11) return 'bilgin';
   if (f('fotoNot') && f('kalp')) return 'album';
   if (f('fenerDilek') && f('kalp')) return 'fener';
   if (n('kediler') >= 4) return 'kedi';
@@ -611,4 +611,139 @@ function evalEnding(P){
   if (P.kaos >= 10) return 'kaos';
   if (f('mektup')) return 'mektup';
   return 'klasik';
+}
+
+// =====================================================================
+//  RASTGELE OLAYLAR
+//  Aynı bölüm içindeki geçişlerde, oyun başına en fazla 3 kez araya girer.
+//  ch:null → olayın bölümü, döneceği sahnenin bölümüdür.
+// =====================================================================
+const EV_RET = c => c.P.evtRet;
+const EVENTS = {
+ev_yagmur:{title:'Ani Sağanak', art:'kasaba', sp:'anlatici', cond:c => true,
+ text:`Gökyüzü bir anda kararıyor ve bardaktan boşanırcasına yağmur başlıyor! Kasabalılar dükkânlara kaçışıyor. Sizin şemsiyeniz yok.`,
+ choices:[
+  {t:'Pankartı başımızın üstüne tutmak', s:'pankart şemsiye', st:'ze', req:c => c.has('pankart'), rq:'🪧 Pankart gerekli', fx:{uyum:1},
+   ok:`"SENİ ÖZLEDİM" pankartının altında, omuz omuza yürüyorsunuz. Islanan tek şey pankartın "Ö" harfi. Yoldan geçenler fotoğraf çekiyor.`, go:EV_RET},
+  {t:'Yağmurun altında dans etmek', s:'yağmurda dans', st:'ck', check:{dc:8}, fx:{uyum:1}, fxF:{kaos:1},
+   ok:`Su birikintilerinde dönüp duruyorsunuz. Film sahnesi gibi. Balkondaki bir teyze alkışlıyor.`,
+   fail:`İkinci dönüşte biriniz kayıyor, öbürü onu tutmaya çalışırken ikiniz birden su birikintisine oturuyorsunuz. Sırılsıklam ve kahkahalar içinde.`, go:EV_RET},
+  {t:'En yakın kahvehaneye sığınmak', s:'kahvehaneye sığınmak', st:'sa', fx:{flag:{kehanet:1}},
+   ok:`Kahvehanede dedeler size çay ısmarlıyor. Biri fincanınıza bakıp mırıldanıyor: "Gökyüzünde bir yolculuk görüyorum…" Yağmur dinince yola devam ediyorsunuz.`, go:EV_RET}
+ ]},
+ev_keci:{title:'Profesör Firarda (Yine)', art:'kasaba', sp:'anlatici', cond:c => c.has('profesor') && c.P.inv.some(i => i !== 'profesor'),
+ text:c => `Bir anlık dalgınlık… Profesör çantanıza kafasını sokup <b>${ITEMS[c.P.inv.find(i => i !== 'profesor')].n}</b> eşyanızı ağzına alıyor ve dörtnala kaçıyor!`,
+ choices:[
+  {t:'Peşinden koşmak', s:'keçiyi kovalamak', st:'ce', check:{dc:9}, fxF:c => ({inv:['-' + c.P.inv.find(i => i !== 'profesor')]}),
+   ok:`Üç sokak, iki bahçe ve bir çamaşır ipinden sonra Profesör'ü köşeye sıkıştırıyorsunuz. Eşyanız biraz salyalı ama sağlam.`,
+   fail:`Profesör bir çitin üstünden atlayıp gözden kayboluyor. Yarım saat sonra elleri boş geri geliyor. Eşyanız gitti.`, go:EV_RET},
+  {t:'Keçi Bakımı 101\'deki ıslığı çalmak', s:'keçi ıslığı', st:'ze', req:c => c.has('kitap'), rq:'📕 Keçi Bakımı 101 gerekli',
+   ok:`Islığı duyan Profesör frene basıyor, geri dönüp eşyayı ayaklarınızın dibine bırakıyor ve özür diler gibi başını eğiyor.`, go:EV_RET},
+  {t:'Gülüp bırakmak: "Ona lazımmış"', s:'gitsin varsın', st:'ck', fx:c => ({inv:['-' + c.P.inv.find(i => i !== 'profesor')], uyum:1}),
+   ok:`İkiniz de gülmekten duramıyorsunuz. Profesör bir süre sonra elleri boş ve çok mutlu geri dönüyor. Eşyayı nereye sakladığını hiç öğrenemeyeceksiniz.`, go:EV_RET}
+ ]},
+ev_muzisyen:{title:'Gezgin Müzisyen', art:'kasaba', sp:'anlatici', cond:c => true,
+ text:`Köşe başında saçı sakalı birbirine karışmış bir müzisyen bağlama çalıyor. Sizi görünce göz kırpıp romantik bir türküye geçiyor.`,
+ choices:[
+  {t:'Kol kola sallanmak', s:'sallanmak', st:'ck', fx:{uyum:1},
+   ok:`Türkünün nakaratında kendinizi kaybediyorsunuz. Müzisyen son notada eğilip "Bu şarkı sizin" diyor.`, go:EV_RET},
+  {t:'Bahşiş verip bir şarkı istemek', s:'şarkı istemek', st:'sa', fx:{npc:{ramazan:1}},
+   ok:`Müzisyen istediğiniz şarkıyı çalıyor. Meğer Ramazan Abi'nin en sevdiği şarkıymış; taksisinden inip size katılıyor.`, go:EV_RET},
+  {t:'Mikrofonu kapıp eşlik etmek', s:'eşlik etmek', st:'ce', check:{dc:9}, fx:{npc:{ramazan:1, gulizar:1}}, fxF:{kaos:1},
+   ok:`Sesinizi duyan kasabalılar pencereleri açıyor. Bir anda sokak konserine dönüyor. Gülizar Hanım bile başını sallıyor.`,
+   fail:`İlk notada sesiniz çatallanıyor. Bir köpek uluyarak size katılıyor. Müzisyen nazikçe mikrofonu geri alıyor.`, go:EV_RET}
+ ]},
+ev_yavru:{title:'Kayıp Yavru Kedi', art:'kasaba', sp:'anlatici', cond:c => true,
+ text:`Bir duvarın dibinde minicik, tekir bir yavru kedi miyavlıyor. Boynundaki kurdelede "Paşa'nın oğlu" yazıyor.`,
+ choices:[
+  {t:'Yavruyu sahibine götürmek', s:'yavruyu götürmek', st:'ze', fx:{npc:{kediler:2}},
+   ok:`Yavruyu Nadide Teyze'nin pansiyonuna götürüyorsunuz. Paşa sizi görünce ilk kez mırlıyor. 14 kedinin gözünde artık kahramansınız.`, go:EV_RET},
+  {t:'Bir süre sevip oynamak', s:'yavruyla oynamak', st:'ck', fx:{uyum:1, npc:{kediler:1}},
+   ok:`Yavru ikinizin arasında gidip geliyor ve sonunda ikinizin kucağına aynı anda oturmaya karar veriyor. Sonra kendisi evinin yolunu buluyor.`, go:EV_RET},
+  {t:'Ona bir isim verip fotoğraf çekmek', s:'isim vermek', st:'sa', fx:{flag:{yavru:1}},
+   ok:`Adını "Köfte Jr." koyuyorsunuz. Fotoğrafta yavru esniyor, siz gülüyorsunuz. Mükemmel bir kare.`, go:EV_RET}
+ ]},
+ev_cekilis:{title:'Şanslı Çekiliş', art:'festival', sp:'anlatici', cond:c => true,
+ text:`Bir çocuk elinde kutuyla koşarak geliyor: "Okul yararına çekiliş! Bir bilet sadece 5 lira! Büyük ödül sürpriz!"`,
+ choices:[
+  {t:'İki bilet almak', s:'bilet almak', st:'sa', check:{dc:8}, fx:{inv:['+lokum']},
+   ok:`Kazandınız! Büyük ödül: Lokumcu Hasan Usta'nın meşhur gül lokumu kutusu. Çocuk sizden çok seviniyor.`,
+   fail:`Biletlerden biri boş, öbüründe "Bir dahakine" yazıyor. Ama okulun yeni kitaplıklarına katkıda bulundunuz.`, go:EV_RET},
+  {t:'Bilet almadan bağış yapmak', s:'bağış', st:'ck', fx:{npc:{gulizar:1}},
+   ok:`Çocuk sevinçle koşup kutuyu teslim ediyor. Uzaktan izleyen Gülizar Hanım sizi takdirle süzüyor: "Hayırlı gençler."`, go:EV_RET}
+ ]},
+ev_telefon:{title:'Aynı Anda Çalan Telefonlar', art:'kasaba', sp:'anlatici', cond:c => true,
+ text:`İkinizin telefonu aynı anda çalıyor. Ekranlarda: <b>"Annem — görüntülü arama"</b>. İki aile de "Buluşma nasıl gidiyor?" diye merak etmiş.`,
+ choices:[
+  {t:'İkisini birden açıp tanıştırmak', s:'aileleri tanıştırmak', st:'ck', check:{dc:8}, fx:{uyum:1}, fxF:{kaos:1},
+   ok:`İki ekran, iki anne, bir sürü "Aaa ne tatlısınız!" Anneler birbirlerinin numarasını istiyor. Bu iş büyüyor…`,
+   fail:`İki ekranda iki anne aynı anda konuşuyor, görüntü donuyor, biri "Sesiniz gelmiyor" diyor. Uzak mesafe ilişkisinin özeti.`, go:EV_RET},
+  {t:'"Sonra arayalım" mesajı atmak', s:'sonra aramak', st:'ze',
+   ok:`İkiniz de aynı anda aynı mesajı yazıyorsunuz: "Çok iyiyiz, sonra ararız ❤️". Telefonları cebe atıp anın tadını çıkarıyorsunuz.`, go:EV_RET},
+  {t:'Birlikte selfie çekip göndermek', s:'selfie', st:'sa', fx:{flag:{selfie:1}},
+   ok:`Arka planda bir keçi, bir taksi ve bir simitçi. Fotoğraf iki aile grubunda da rekor beğeni alıyor.`, go:EV_RET}
+ ]},
+ev_tavuk:{title:'Kaçak Tavuklar', art:'kasaba', sp:'ramazan', cond:c => c.P.npc.ramazan !== undefined,
+ text:`Yolun ortasında kanat çırpan bir tavuk sürüsü! Arkalarından Ramazan Abi nefes nefese koşuyor: <i>"Kardeşimin tavukları! Tutun şunları!"</i>`,
+ choices:[
+  {t:'Tavukları kovalamak', s:'tavuk kovalamak', st:'ce', check:{dc:9}, fx:{npc:{ramazan:2}}, fxF:{kaos:1},
+   ok:`On iki tavuğun on ikisini de yakalıyorsunuz. Ramazan Abi duygulanıyor: "Siz benim ailemsiniz artık."`,
+   fail:`Tavuklar sizi kovalıyor. Nasıl olduğunu kimse anlamıyor. Ramazan Abi gülmekten tavukları unutuyor.`, go:EV_RET},
+  {t:'Profesör\'ü çoban olarak göndermek', s:'çoban Profesör', st:'sa', req:c => c.has('profesor'), rq:'🐐 Profesör yanınızda olmalı', fx:{npc:{ramazan:2}},
+   ok:`Profesör tek bir "Meee" ile sürüyü sıraya diziyor ve kümese kadar götürüyor. Ramazan Abi ağzı açık bakıyor.`, go:EV_RET},
+  {t:'Mısır serpip tavukları çağırmak', s:'mısır serpmek', st:'ze', fx:{npc:{ramazan:1}},
+   ok:`Bir avuç mısır ve tavuklar kendiliğinden kümese yürüyor. Bazen en basit plan en iyisidir.`, go:EV_RET}
+ ]},
+ev_turist:{title:'Turist Çift', art:'kasaba', sp:'anlatici', cond:c => true,
+ text:`Haritası elinde, kaybolmuş görünen yaşlı bir turist çift size yaklaşıyor: <i>"Pardon, burası Ortanokta mı, Ötenokta mı? Kırk yıldır evliyiz ve hâlâ yön konusunda anlaşamıyoruz."</i>`,
+ choices:[
+  {t:'Onlara kasabayı gezdirmek', s:'turistlere rehberlik', st:'ck', fx:{uyum:1},
+   ok:`Bir saat boyunca kasabayı gezdiriyorsunuz. Giderken teyze kulağınıza fısıldıyor: "Kırk yıl sonra siz de böyle kaybolun inşallah."`, go:EV_RET},
+  {t:'Sırlarını sormak', s:'evlilik sırrı', st:'ze', fx:{flag:{sir40:1}},
+   ok:`Amca gülümsüyor: "Sır yok evladım. Kavga edince ilk kim gülerse o kazanır." Teyze ekliyor: "Hep ben kazanırım." Bu söz aklınızda kalıyor.`, go:EV_RET}
+ ]}
+};
+const EVENT_IDS = Object.keys(EVENTS);
+EVENT_IDS.forEach(id => { S[id] = Object.assign({ch:null, event:true}, EVENTS[id]); });
+EVENT_IDS.forEach(id => { S[id].choices = S[id].choices; });
+const EVENT_CHAPTERS = [1, 2, 3];
+const EVENT_P = 0.13, EVENT_MAX = 3;
+
+// =====================================================================
+//  ROZETLER (albümdeki bütün oyunlara bakılarak hesaplanır)
+// =====================================================================
+const BADGES = {
+  ilk:{i:'🎈', t:'İlk Macera', d:'İlk oyununuzu bitirin.', ok:(A) => A.length >= 1},
+  uc:{i:'🧳', t:'Gezgin Çift', d:'3 oyun bitirin.', ok:(A) => A.length >= 3},
+  on:{i:'🏆', t:'Ortanokta Müdavimi', d:'10 oyun bitirin.', ok:(A) => A.length >= 10},
+  ruh:{i:'💞', t:'Ruh İkizi', d:'"Ruh İkizleri" sonunu bulun.', ok:(A) => A.some(g => g.ending === 'ruh')},
+  kaosu:{i:'🌪️', t:'Kaos Kraliyeti', d:'"Efsanevi Kaos Ustaları" sonunu bulun.', ok:(A) => A.some(g => g.ending === 'kaos')},
+  bilgin:{i:'🧠', t:'Ezber Çift', d:'Bir oyunda mini oyunlarda en az 11 eşleşme yapın.', ok:(A) => A.some(g => (g.mm || 0) >= 11)},
+  kusursuz:{i:'🎯', t:'Kusursuz Tur', d:'Bir mini oyunu tek hata yapmadan bitirin.', ok:(A) => A.some(g => (g.perf || 0) > 0)},
+  gorev1:{i:'🤫', t:'Gizli Ajan', d:'Gizli görevlerden birini başarın.', ok:(A) => A.some(g => g.mis && (g.mis.irem || g.mis.cengiz))},
+  gorev2:{i:'🕵️', t:'Ajan İkilisi', d:'Aynı oyunda ikiniz de gizli görevinizi başarın.', ok:(A) => A.some(g => g.mis && g.mis.irem && g.mis.cengiz)},
+  hapis:{i:'🔒', t:'Sabıkalı', d:'Ötenokta hapishanesine düşün.', ok:(A) => A.some(g => g.jailed)},
+  balon:{i:'☁️', t:'Bulut Yolcusu', d:'Sıcak hava balonuna binin.', ok:(A) => A.some(g => g.rode)},
+  keci:{i:'🐐', t:'Keçi Dostu', d:'Oyunu Profesör yanınızdayken bitirin.', ok:(A) => A.some(g => g.prof)},
+  ikna:{i:'🤝', t:'Uzlaşma Ustası', d:'Bir oyunda 3 kez partnerinizin fikrine katılın.', ok:(A) => A.some(g => (g.ikna || 0) >= 3)},
+  zar:{i:'🎲', t:'Kaderin Zarları', d:'Taş-kağıt-makasta 3 kez berabere kalıp kararı zara bırakın.', ok:(A) => A.some(g => g.zar)},
+  kesif:{i:'🗺️', t:'Kâşif', d:'Kasabadaki 5 mekânın hepsini gezin (farklı oyunlarda olabilir).', ok:(A) => ['pazar','degirmen','gol','kahve','kutuphane'].every(v => A.some(g => (g.visits || []).includes(v)))},
+  olay:{i:'⚡', t:'Sürprizlere Açık', d:'Bir oyunda 3 rastgele olayla karşılaşın.', ok:(A) => A.some(g => (g.evts || 0) >= 3)},
+  yedi:{i:'📚', t:'Hikâye Avcısı', d:'7 farklı son bulun.', ok:(A, F) => F.length >= 7},
+  hepsi:{i:'👑', t:'Ortanokta Efsanesi', d:'Bütün sonları bulun.', ok:(A, F) => ENDING_ORDER.every(k => F.includes(k))}
+};
+const BADGE_ORDER = Object.keys(BADGES);
+function earnedBadges(album, found){ const A = album || [], F = found || []; return BADGE_ORDER.filter(k => { try { return BADGES[k].ok(A, F); } catch(e){ return false; } }); }
+
+// Biten bir oyunun albüm kaydı
+function albumEntry(P){
+  const tr = p => { const e = P.log && P.log[0]; if (!e || e.scene !== 'karakter') return null; return S.karakter.choices[p === 'irem' ? e.i : e.c].t; };
+  return {
+    seed:P.seed, at:Date.now(), ending:P.ending, uyum:P.uyum, kaos:P.kaos, mm:P.mqMatch || 0, mt:P.mqTotal || 0,
+    moves:P.log.length, ikna:P.ikna || 0, zar:P.log.some(e => e.m === 'zar'), perf:P.log.filter(e => e.mini && e.mm === e.mt).length,
+    jailed:!!P.flags.jailed, rode:!!P.flags.rode, prof:P.inv.includes('profesor'), evts:P.evtCount || 0,
+    visits:['pazar','degirmen','gol','kahve','kutuphane'].filter(v => P.flags['v_' + v]),
+    mis:{irem:!!(MISSIONS[P.missions.irem] && MISSIONS[P.missions.irem].ok(P, 'irem')), cengiz:!!(MISSIONS[P.missions.cengiz] && MISSIONS[P.missions.cengiz].ok(P, 'cengiz'))},
+    traits:{irem:tr('irem'), cengiz:tr('cengiz')}
+  };
 }
