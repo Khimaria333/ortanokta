@@ -8,3 +8,7 @@ html,body{background:#170f2e}
 .codeinput:focus{border-color:var(--teal)}
 .codeinput::placeholder{color:#cdbfae;letter-spacing:.06em;font-size:20px}
 .menu .btn.hidden{display:none}
+/* iPhone alt boşluk: güvenli alanı sadece en alttaki menü kullansın */
+.actionbar{padding-bottom:10px}
+#dock{padding-bottom:max(6px, calc(env(safe-area-inset-bottom) - 12px))}
+.menu{padding-bottom:max(18px, env(safe-area-inset-bottom))}
