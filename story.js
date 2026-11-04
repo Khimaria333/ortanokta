@@ -254,9 +254,8 @@ duello:{ch:3, title:'Final Düellosu', art:'duello', sp:'gulizar',
   {t:'Dans düellosu', s:'dans', st:'ck', check:c=>({dc:10-(c.f('juri')?1:0)}), fx:{inv:['+altin','+profesor'], flag:{sampiyon:1}}, fxF:{npc:{gulizar:1}},
    ok:`Görüntülü konuşmalarda ekran donunca yaptığınız "donmuş ekran" dansı kasabayı yıkıyor. ŞAMPİYONSUNUZ! Kupa ve Profesör sizin.`,
    fail:`Muhtar Bey ile Gülizar Hanım'ın tangosu kusursuzdu. Kaybettiniz, ama Gülizar Hanım cesaretinizi takdir ediyor.`, go:'balon'},
-  {t:'"Birbirinizi ne kadar tanıyorsunuz?" bilgi yarışması', s:'bilgi yarışması', st:'ze', check:c=>({dc:9-(c.f('juri')?1:0)}), fx:{inv:['+altin','+profesor'], flag:{sampiyon:1}}, fxF:{npc:{gulizar:1}},
-   ok:`Bütün sorulara tıkır tıkır cevap veriyorsunuz. Muhtar Bey ise eşinin doğum gününü bilemiyor. ŞAMPİYONSUNUZ! Kupa ve Profesör sizin.`,
-   fail:`"İrem'in en sevdiği renk?" Sessizlik. Gülizar Hanım iç çekiyor: "Daha çok konuşun." Kaybettiniz ama Gülizar Hanım size biraz ısınıyor.`, go:'balon'},
+  {t:'"Birbirinizi ne kadar tanıyorsunuz?" bilgi yarışması', d:'Gerçek sorular: birbiriniz hakkında ne kadar çok bilirseniz o kadar iyi.', s:'bilgi yarışması', st:'ze',
+   ok:`Gülizar Hanım ellerini ovuşturuyor: "Bilgi yarışması! Bunu 8 yıldır kimse bizden almadı." Muhtar Bey sahneye bir masa ve iki zil getiriyor.`, go:'duello_bilgi'},
   {t:'Gülizar Hanım ile bilek güreşi', s:'bilek güreşi', st:'ce', check:c=>({dc:11-(c.f('juri')?1:0)}), fx:{inv:['+altin','+profesor'], flag:{sampiyon:1}, npc:{gulizar:2}}, fxF:{npc:{gulizar:2}},
    ok:`Dört el, tek kola karşı. 11 dakika. Gülizar Hanım sonunda gülümseyip bırakıyor: "Bu sevgi beni yendi." ŞAMPİYONSUNUZ! Gülizar Hanım artık en büyük hayranınız.`,
    fail:`Gülizar Hanım ikinizi birden 2 saniyede yeniyor. Ama ayağa kalkıp ellerinizi sıkıyor: "Kimse benimle güreşmeye cesaret edemezdi." Saygısını kazandınız.`, go:'balon'}
@@ -564,6 +563,16 @@ isinma:{ch:3, title:'Çiftler Isınma Turu', art:'festival', sp:'sunucu', choice
    : {fx:null, text:`Seyirciler kahkahalarla gülüyor. Necati "Bu çift daha birbirini keşfediyor!" diyor. En azından herkes sizi tanıdı.`}},
  go:'festival'},
 
+duello_bilgi:{ch:3, title:'Final: Bilgi Yarışması', art:'duello', sp:'gulizar', choices:[],
+ mini:{qs:[['tahmin','irem'],['tahmin','cengiz'],['ayni'],['kim']],
+  intro:`Muhtar Bey ile Gülizar Hanım ilk turu kusursuz geçiyor: 4 soruda 4 doğru. Şimdi sıra sizde. Gülizar Hanım mikrofonu alıyor:<br><br><i>"Dört soru soracağım. Muhtar Bey'le bizi geçmek için en az üçünü bilmeniz lazım. Hile yok, birbirinize bakmak yok!"</i>`,
+  reward:(m, n) => m >= 3
+   ? {fx:{inv:['+altin','+profesor'], flag:{sampiyon:1}, npc:{gulizar:2}, uyum:m === n ? 1 : 0},
+      text:m === n ? `Dörtte dört! Gülizar Hanım mikrofonu bırakıp ikinizi birden kucaklıyor: "8 yıldır böylesini görmedim." ŞAMPİYONSUNUZ! Kupa ve Profesör sizin.`
+        : `Dörtte üç, tam sınırda! Seyirciler ayağa kalkıyor. Gülizar Hanım elinizi sıkıyor: "Birbirinizi gerçekten tanıyorsunuz." ŞAMPİYONSUNUZ! Kupa ve Profesör sizin.`}
+   : {fx:{npc:{gulizar:1}}, text:m === 2 ? `Dörtte iki… Kıl payı kaybettiniz. Gülizar Hanım teselli ediyor: "Az kaldı. Daha çok konuşun, seneye gelin."` : `Gülizar Hanım iç çekiyor: "Siz bu festivalden sonra epey konuşacaksınız." Kaybettiniz ama salondaki herkes size gülümsüyor.`}},
+ go:'balon'},
+
 cift_testi:{ch:5, title:'Gerçek Çift Testi', art:'mahkeme', sp:'nurten', choices:[],
  mini:{qs:[['ayni'],['tahmin','irem'],['refleks'],['tahmin','cengiz']],
   intro:`Ötenokta meydanı. Başkan Tahsin sizi gösterip "Ortanoktalı casuslar!" diye bağırıyor ve meydanda bir mahkeme kuruluyor. Yargıç eczacı Nurten Hanım gözlüğünü indiriyor:<br><br><i>"Önce şunu görelim: gerçekten çift misiniz, yoksa sahte mi? Gerçek çiftler aynı cevapları verir ve aynı anda tepki verir. Ayrı ayrı cevaplayın!"</i>`,
@@ -599,7 +608,7 @@ gece_mini:{ch:6, title:'Fenerlerin Altında', art:'fener', sp:'anlatici', choice
 
 function evalEnding(P){
   const f = k => !!P.flags[k], has = i => P.inv.includes(i), n = k => P.npc[k]||0;
-  if (f('velayet') && has('profesor')) return 'keci';
+  // Önce yolda hak edilen özel sonlar, sonra vedadaki seçim, en son genel sonlar
   if (f('sampiyon') && f('tursuPasta')) return 'tursu';
   if (f('alias') && f('metNecmi') && n('necmi')>=2) return 'varis';
   if ((P.mqMatch||0) >= 11) return 'bilgin';
@@ -607,6 +616,7 @@ function evalEnding(P){
   if (f('fenerDilek') && f('kalp')) return 'fener';
   if (n('kediler') >= 4) return 'kedi';
   if (f('sanat') && P.kaos >= 5) return 'sanat';
+  if (f('velayet') && has('profesor')) return 'keci';
   if (P.uyum >= 16) return 'ruh';
   if (P.kaos >= 10) return 'kaos';
   if (f('mektup')) return 'mektup';
