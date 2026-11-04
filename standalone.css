@@ -1,10 +1,10 @@
 :root{color-scheme:dark light}
 /* Bağımsız (telefona kurulan) sürüm için ekler */
-html,body{background:#170f2e}
+html,body{background:#170f2e;height:var(--appH, 100%)}
 #game{padding-top:env(safe-area-inset-top)}
 @media (max-width:559px){
   /* iPhone ana ekran uygulamasında 100dvh durum çubuğunu saymıyor: ekrana sabitle */
-  #game{position:fixed;top:0;right:0;bottom:0;left:0;height:auto;max-width:none;margin:0;border-radius:0;box-shadow:none}
+  #game{position:fixed;top:0;right:0;left:0;bottom:auto;height:var(--appH, 100%);max-width:none;margin:0;border-radius:0;box-shadow:none}
 }
 .roomcode{font-family:var(--font-h);font-weight:700;font-size:42px;letter-spacing:.18em;text-align:center;padding:14px;border-radius:18px;background:#fff;border:3px dashed var(--violet);color:var(--violet-d);user-select:all}
 .codeinput{font-family:var(--font-h);font-weight:700;font-size:30px;letter-spacing:.18em;text-align:center;padding:14px;border-radius:18px;border:3px solid var(--line);background:#fff;color:var(--ink);text-transform:uppercase;outline:none;width:100%}

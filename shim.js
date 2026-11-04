@@ -118,6 +118,21 @@ addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = 
 const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+// ---------- iPhone ana ekran uygulaması: gerçek ekran boyu ----------
+// iOS, "Ana Ekrana Ekle" ile açılan uygulamada görünür alanı durum çubuğu kadar kısa
+// hesaplıyor. Ekranın gerçek boyunu okuyup oyun alanını ona göre ayarlıyoruz.
+function fitScreen(){
+  const root = document.documentElement;
+  if (!(isIOS() && isStandalone())){ root.style.removeProperty('--appH'); return; }
+  const portrait = innerHeight >= innerWidth;
+  const full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
+  root.style.setProperty('--appH', Math.max(innerHeight, full) + 'px');
+}
+fitScreen();
+addEventListener('resize', fitScreen);
+addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
+document.addEventListener('visibilitychange', fitScreen);
+
 // ---------- oda bilgisi (ayarlar menüsü için) ----------
 function shareUrl(){ return location.origin + location.pathname + '#' + code; }
 window.__room = {
