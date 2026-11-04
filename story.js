@@ -757,3 +757,52 @@ function albumEntry(P){
     traits:{irem:tr('irem'), cengiz:tr('cengiz')}
   };
 }
+
+// =====================================================================
+//  JOKERLER (kişi başı 2: biri başta, biri yolda kazanılır; gizli)
+// =====================================================================
+const JOKERS = {
+  veto:{i:'🛑', n:'Veto', d:'Anlaşmazlıkta taş-kağıt-makasa gerek kalmadan senin kararın geçer. Kaos yine yazılır.', w:'Taş-kağıt-makas ekranında'},
+  sans:{i:'🍀', n:'Şans tılsımı', d:'Seçtiğin işin yetenek kontrolüne +3 ekler. Senin kararın uygulanırsa harcanır.', w:'🎲 işaretli bir seçeneği seçip kilitlemeden önce'},
+  maymun:{i:'🗝️', n:'Maymuncuk', d:'Kilitli bir seçeneği tek seferliğine senin için açar.', w:'Kilitli bir seçeneğe dokununca'},
+  kehanet:{i:'🔮', n:'Kehanet', d:'O sahnedeki seçeneklerden hangisinin ileride işe yarayacak bir şey getirdiğini gösterir.', w:'Karar ekranında'},
+  goz:{i:'👀', n:'Göz ucuyla', d:'Partnerin kararını verdiyse, sen kilitlemeden önce ne seçtiğini görürsün.', w:'Karar ekranında, partnerin oy verdikten sonra'},
+  yari:{i:'✂️', n:'Yarı yarıya', d:'Mini oyunda tahmin ederken iki yanlış şıkkı eler.', w:'"Tahmin et" ya da "Çiz-bil" sorusunda tahminci sen olduğunda'}
+};
+const JOKER_IDS = Object.keys(JOKERS);
+
+// =====================================================================
+//  BİR YIL SONRA… (yolculuğa göre değişen epilog)
+// =====================================================================
+function epilogue(P){
+  const f = k => !!P.flags[k], has = i => P.inv.includes(i), n = k => P.npc[k] || 0, out = [];
+  // Profesör
+  if (P.ending === 'keci') out.push('Profesör iki şehir arasında o kadar çok yolculuk yaptı ki otobüs firması ona "yılın yolcusu" plaketi verdi.');
+  else if (has('profesor')) out.push('Profesör her ay ikinize de aynı anda bir kartpostal yolluyor. Nasıl yaptığını kimse bilmiyor; zarfların hepsi biraz ısırılmış.');
+  else out.push('Profesör hâlâ Ortanokta kütüphanesinde "onursal müdür" ve her ziyaretçiye sizi soruyor.');
+  // en yakın dost
+  const best = Object.entries(P.npc).sort((a, b) => b[1] - a[1])[0];
+  const DOST = {
+    ramazan:'Ramazan Abi taksisinin arka camına ikinizin fotoğrafını yapıştırdı; her yolcuya hikâyenizi anlatıyor.',
+    kediler:'Paşa her sabah pansiyonun penceresinde sizin geleceğiniz yolu gözlüyor. 14 kedi artık 19 oldu.',
+    gulizar:'Gülizar Hanım bu yıl turşu yarışmasını yine kazandı ve kürsüde "Bu kupayı İrem ile Cengiz\'e adıyorum" dedi.',
+    hayri:'Kaptan Hayri sonunda ehliyetini aldı ve balonunun adını "İrem & Cengiz" koydu.',
+    necmi:'Fikriye ile Necmi kasabaya geri döndü; kulübeyi "aşıklar için misafirhane" yaptılar ve ilk rezervasyon sizin adınıza.',
+    tahsin:'Başkan Tahsin her bayram size bir kutu fıstıklı lokum yolluyor. Kutunun üstünde "Casus olmadığınızı biliyordum" yazıyor.',
+    sevket:'Balıkçı Şevket gölde tuttuğu en büyük balığa sizin adınızı verdi. Balık bu fikre pek sıcak bakmıyor.'
+  };
+  if (best && best[1] >= 2 && DOST[best[0]]) out.push(DOST[best[0]]);
+  // yolculuktan izler
+  if (has('altin') || f('sampiyon')) out.push('Altın Turşu Kupası, ikinizden birinin evinde başköşede duruyor; altı ayda bir kargoyla yer değiştiriyor.');
+  else if (f('jailed')) out.push('Ötenokta hapishanesindeki hücreniz artık bir müze: kapısında "Burada iki âşık üç gün tavla oynadı" yazıyor.');
+  else if (f('fenerDilek')) out.push('Fener Gecesi\'nde uçurduğunuz fener hiç geri gelmedi. İkiniz de dileğinizin yolda olduğuna inanıyorsunuz.');
+  else if (f('yavru')) out.push('Köfte Jr. büyüdü ve kasabanın en tombul kedisi oldu.');
+  else if (f('rode')) out.push('Balonla uçtuğunuz gün kasabanın kartpostallarına girdi; turistler hâlâ o kartpostalı alıyor.');
+  if (f('sir40')) out.push('Turist çiftin sözü aklınızda: "Kavga edince ilk kim gülerse o kazanır." İkiniz de hep ilk gülmeye çalışıyorsunuz.');
+  // ilişkinin hâli
+  if (P.uyum >= 16) out.push('Telefonda konuşurken hâlâ aynı anda aynı cümleyi kuruyorsunuz. Artık şaşırmıyorsunuz bile.');
+  else if (P.kaos >= 10) out.push('Hâlâ hiçbir konuda anlaşamıyorsunuz: film, yemek, keçi… Ama her tartışma bir kahkahayla bitiyor.');
+  else out.push('Bazen anlaştınız, bazen taş-kağıt-makasla karar verdiniz. Ama en önemli konuda hep aynı fikirdeydiniz.');
+  out.push('Ve bir sonraki buluşmanın tarihi takvimde çoktan işaretli. 💌');
+  return out.join(' ');
+}

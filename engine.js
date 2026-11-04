@@ -132,6 +132,7 @@ function resolveMini(P){
   const fx = [];
   const rw = sc.mini.reward(matches, total, c);
   applyFx(N, rw.fx, fx);
+  if (matches === total) earnJokers(N, fx, 'mini');
   N.log.push({scene:P.scene, mini:true, mm:matches, mt:total});
   N.mq = null;
   transition(N, val(sc.go, ctxOf(N)), fx);
@@ -144,15 +145,29 @@ function newGame(prev, cq){
   const keys = Object.keys(MISSIONS);
   const a = keys[Math.floor(Math.random() * keys.length)];
   let b; do { b = keys[Math.floor(Math.random() * keys.length)]; } while (b === a);
-  return {
+  const N0 = {
     v:GAME_V, step:((prev && typeof prev.step === 'number') ? prev.step : 0) + 1, seed, scene:'karakter', from:null,
     stats:{irem:{ce:1, ck:1, ze:1, sa:1}, cengiz:{ce:1, ck:1, ze:1, sa:1}},
     inv:[], npc:{}, flags:{}, uyum:0, kaos:0, wins:{irem:0, cengiz:0},
     missions:{irem:a, cengiz:b}, last:null, log:[], ending:null, dis:null, ikna:0,
     mq:null, mqMatch:0, mqTotal:0, visits:0, qUsed:[], evtUsed:[], evtCount:0, evtRet:null,
     cq:Array.isArray(cq) ? cq.filter(q => q && q.id && q.t && ['tahmin','kim','ayni'].includes(q.kind)).slice(0, 60) : [],
-    found:(prev && Array.isArray(prev.found)) ? prev.found.filter(k => ENDINGS[k]) : []
+    found:(prev && Array.isArray(prev.found)) ? prev.found.filter(k => ENDINGS[k]) : [],
+    jok:{irem:[], cengiz:[]}, jokUsed:{irem:[], cengiz:[]}, jokEarned:{irem:0, cengiz:0}
   };
+  const rj = rngFor(seed ^ 0x77d1, 0);
+  grantJoker(N0, 'irem', rj); grantJoker(N0, 'cengiz', rj);
+  return N0;
+}
+
+// ---------- jokerler ----------
+function jokAvail(P, p, extraUsed){ const used = (P.jokUsed && P.jokUsed[p]) || [], ex = extraUsed || []; return ((P.jok && P.jok[p]) || []).filter(j => !used.includes(j.id) && !ex.includes(j.id)); }
+function jokFind(P, p, t, extraUsed){ return jokAvail(P, p, extraUsed).find(j => j.t === t) || null; }
+function grantJoker(N, p, r){ N.jok = N.jok || {irem:[], cengiz:[]}; N.jok[p] = N.jok[p] || []; const t = JOKER_IDS[Math.floor(r() * JOKER_IDS.length)]; N.jok[p].push({id:p[0] + (N.jok[p].length + 1) + t, t}); }
+function useJok(N, p, id){ N.jokUsed = N.jokUsed || {irem:[], cengiz:[]}; N.jokUsed[p] = N.jokUsed[p] || []; if (!N.jokUsed[p].includes(id)) N.jokUsed[p].push(id); }
+function earnJokers(N, fx, why){
+  const r = rngFor(N.seed ^ 0x1f3a, N.step * 7 + 3); N.jokEarned = N.jokEarned || {irem:0, cengiz:0};
+  PL.forEach(p => { if ((N.jokEarned[p] || 0) < 1){ grantJoker(N, p, r); N.jokEarned[p] = 1; fx.push({k:'joker', t:`🃏 ${NAMES[p]} yeni bir joker kazandı`}); } });
 }
 
 function pickFunny(c, r){ const pool = FUNNY.filter(f => !f.c || f.c(c)); return pool[Math.floor(r() * pool.length)].t; }
@@ -160,10 +175,12 @@ function pickFunny(c, r){ const pool = FUNNY.filter(f => !f.c || f.c(c)); return
 // Taş-kağıt-makas: 1 = İrem kazanır, -1 = Cengiz, 0 = berabere
 const BEATS = {tas:'makas', makas:'kagit', kagit:'tas'};
 function rpsOutcome(a, b){ return a === b ? 0 : BEATS[a] === b ? 1 : -1; }
-const validThrow = h => h === 'katil' || !!HANDS[h];
+const validThrow = h => h === 'katil' || h === 'veto' || !!HANDS[h];
 
 // Anlaşmazlık turunu ilerlet. {state:N} (yeni tur) ya da {resolve:dis} döner.
 function disAdvance(P, ti, tc){
+  if (ti === 'veto' && !jokFind(P, 'irem', 'veto')) ti = 'tas';
+  if (tc === 'veto' && !jokFind(P, 'cengiz', 'veto')) tc = 'tas';
   const d = P.dis, hist = d.hist.concat([{i:ti, c:tc}]);
   if (ti === 'katil' || tc === 'katil'){
     let by;
@@ -171,6 +188,12 @@ function disAdvance(P, ti, tc){
     else by = ti === 'katil' ? 'irem' : 'cengiz';
     return {resolve:{mode:'concede', by, hist, both:ti === 'katil' && tc === 'katil'}};
   }
+  if (ti === 'veto' && tc === 'veto'){
+    // iki veto birbirini götürür: ikisi de harcanır, tur berabere sayılır
+    if (d.round < RPS_ROUNDS){ const N = clone(P); N.dis = Object.assign({}, d, {round:d.round + 1, hist}); useJok(N, 'irem', jokFind(P, 'irem', 'veto').id); useJok(N, 'cengiz', jokFind(P, 'cengiz', 'veto').id); return {state:N}; }
+    return {resolve:{mode:'dice', hist, useVeto:['irem', 'cengiz']}};
+  }
+  if (ti === 'veto' || tc === 'veto'){ const w = ti === 'veto' ? 'irem' : 'cengiz'; return {resolve:{mode:'veto', w, hist, useVeto:[w]}}; }
   const o = rpsOutcome(ti, tc);
   if (o === 0){
     if (d.round < RPS_ROUNDS){ const N = clone(P); N.dis = Object.assign({}, d, {round:d.round + 1, hist}); return {state:N}; }
@@ -181,14 +204,18 @@ function disAdvance(P, ti, tc){
 function openDis(P, vi, vc){ const N = clone(P); N.dis = {step:P.step, round:1, hist:[], i:vi, c:vc}; return N; }
 
 // İki oyla bir hamleyi çöz. Saf fonksiyon. dis: anlaşmazlığın nasıl çözüldüğü.
-function resolve(P, vi, vc, dis){
+function resolve(P, vi, vc, dis, jv){
+  jv = jv || {};
   const sc = S[P.scene], r = rngFor(P.seed, P.step), c = ctxOf(P);
   const N = clone(P);
   N.step = P.step + 1;
   N.from = P.scene;
   N.dis = null;
   const fx = [];
-  const last = {scene:P.scene, step:P.step, i:vi, c:vc, agree:vi === vc, art:val(sc.art, c), title:sc.title};
+  const last = {scene:P.scene, step:P.step, i:vi, c:vc, agree:vi === vc, art:val(sc.art, c), title:sc.title, jok:[]};
+  // maymuncuk: kilitli seçeneğe oy verildiyse harcanır
+  PL.forEach(p => { const v = jv[p]; if (v && v.j === 'maymun'){ const j = jokFind(P, p, 'maymun'); if (j){ useJok(N, p, j.id); last.jok.push({p, t:'maymun'}); } } });
+  if (dis && dis.useVeto) dis.useVeto.forEach(p => { const j = jokFind(P, p, 'veto'); if (j){ useJok(N, p, j.id); last.jok.push({p, t:'veto'}); } });
   let go;
 
   if (sc.individual){
@@ -210,6 +237,12 @@ function resolve(P, vi, vc, dis){
       N.ikna = (N.ikna || 0) + 1;
       fx.push({k:'ikna', t:`🤝 ${NAMES[dis.by]} ikna oldu`});
       last.concede = {by:dis.by, both:!!dis.both, hist:dis.hist || []};
+    } else if (dis && dis.mode === 'veto'){
+      const w = dis.w;
+      applied = w === 'irem' ? vi : vc; appliers = [w];
+      N.kaos++; N.wins[w]++;
+      fx.push({k:'kaos', t:'🌪️ Kaos', v:1});
+      last.veto = {w, hist:dis.hist || []};
     } else if (dis && dis.mode === 'rps'){
       const w = dis.w;
       applied = w === 'irem' ? vi : vc; appliers = [w];
@@ -234,10 +267,12 @@ function resolve(P, vi, vc, dis){
     let ok = true;
     const chk = checkOf(ch, c);
     if (chk){
-      const base = appliers.reduce((s, p) => s + P.stats[p][ch.st], 0);
+      let bonus = 0;
+      appliers.forEach(p => { const v = jv[p]; if (v && v.j === 'sans'){ const j = jokFind(P, p, 'sans'); if (j){ bonus += 3; useJok(N, p, j.id); last.jok.push({p, t:'sans'}); } } });
+      const base = appliers.reduce((s, p) => s + P.stats[p][ch.st], 0) + bonus;
       const roll = d6(r), total = base + roll;
       ok = total >= chk.dc;
-      last.check = {st:ch.st, base, roll, total, dc:chk.dc, ok, team:appliers.length === 2, who:appliers.length === 1 ? appliers[0] : null};
+      last.check = {st:ch.st, base, roll, total, dc:chk.dc, ok, team:appliers.length === 2, who:appliers.length === 1 ? appliers[0] : null, bonus};
     }
     last.text = val(ok ? ch.ok : (ch.fail || ch.ok), c);
     applyFx(N, val(ok ? ch.fx : ch.fxF, c), fx);
@@ -245,6 +280,7 @@ function resolve(P, vi, vc, dis){
       if (N.stats[p][ch.st] < 8){ N.stats[p][ch.st]++; fx.push({k:'stat', t:`${NAMES[p]} · ${STATS[ch.st][0]} ${STATS[ch.st][1]}`, v:1}); }
     });
     go = ok ? ch.go : (ch.goF || ch.go);
+    if (sc.event) earnJokers(N, fx, 'olay');
   }
 
   N.log.push({scene:P.scene, i:vi, c:vc, a:last.a === undefined ? null : last.a, ok:last.check ? last.check.ok : null,

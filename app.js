@@ -156,24 +156,49 @@ function stageHTML(key, opts = {}){
 // =====================================================================
 //  DURUM
 // =====================================================================
-const PATH = {custom:'o3/custom', album:'o3/album', state:'o3/state', vote:p => 'o3votes/' + p, hand:p => 'o3hands/' + p, ans:p => 'o3ans/' + p};
+const PATH = {custom:'o3/custom', album:'o3/album', state:'o3/state', vote:p => 'o3votes/' + p, hand:p => 'o3hands/' + p, ans:p => 'o3ans/' + p, jok:p => 'o3jok/' + p};
 const G = {
   db:null, room:null, user:null, ref:null, vref:{},
   P:null, V:{irem:null, cengiz:null}, T:{irem:null, cengiz:null}, tref:{}, A:{irem:null, cengiz:null}, aref:{}, asel:null, answering:false, loaded:{p:false, irem:false, cengiz:false}, ready:false, hsel:null, throwing:false,
   me:null, readOnly:false, view:null, viewKey:null, sel:null, voting:false, advancing:-1, starting:false,
   run:0, skip:null, fast:false, peers:[], toastedStep:-1, lastReact:0, nudgeAt:0,
-  found:LS.get('found', []), C:{qs:[]}, ALB:{games:[]}, cref:null, albref:null, newBadges:null
+  found:LS.get('found', []), C:{qs:[]}, ALB:{games:[]}, cref:null, albref:null, newBadges:null, Jk:{irem:null, cengiz:null}, jref:{}, useSans:false
 };
 const isMeOnline = () => true;
 
 // ---------- yardımcılar ----------
-function validVote(v){
+function validVote(v, p){
   const P = G.P;
   if (!v || !isGame(P) || P.scene === 'end' || v.step !== P.step || !Number.isInteger(v.choice)) return false;
   const ch = S[P.scene].choices[v.choice];
-  return !!ch && isOpen(ch, ctxOf(P));
+  return !!ch && (isOpen(ch, ctxOf(P)) || (v.j === 'maymun' && !!p && !!jokFind(P, p, 'maymun')));
 }
-const myVote = () => validVote(G.V[G.me]) ? G.V[G.me].choice : null;
+const myVote = () => validVote(G.V[G.me], G.me) ? G.V[G.me].choice : null;
+// ---------- jokerler (arayüz tarafı) ----------
+const jokLocalUsed = p => { const d = G.Jk[p]; return (d && G.P && d.seed === G.P.seed && Array.isArray(d.used)) ? d.used : []; };
+const myJokers = () => isGame(G.P) ? jokAvail(G.P, G.me, jokLocalUsed(G.me).map(u => u.id)) : [];
+const hasJ = t => myJokers().find(j => j.t === t) || null;
+async function useInstant(t, extra){
+  const j = hasJ(t); if (!j) return false;
+  const used = jokLocalUsed(G.me).concat([Object.assign({id:j.id, t, step:G.P.step}, extra || {})]);
+  try { await G.jref[G.me].set({seed:G.P.seed, used}); G.Jk[G.me] = {seed:G.P.seed, used}; Sound.play('win'); updateDock(); return true; }
+  catch(e){ writeErr(e); return false; }
+}
+function updateDock(){ const b = $('#bJok'); if (!b) return; const n = myJokers().length; b.textContent = n; b.classList.toggle('hidden', !n); }
+const IMPORTANT_FLAGS = ['alias','sir','efsaneIz','tatliIpucu','tarihBilgi','otenoktaBilgi','kehanet','balonGordu','durust','muze','necmiYanda','kediOrdusu','gecit','fenerDilek','fotoNot','sampiyon','tursuPasta','velayet','mektup','sanat','tarifIfsa','sir40'];
+const SPECIAL_GO = ['orman','kulube','gece','konusma','panayir','duello','duello_bilgi','gokyuzu_pilot','takip','baris','teselli'];
+function prophecy(ch, c){
+  const out = [];
+  let fx = null; try { fx = val(ch.fx, c) || {}; } catch(e){ fx = {}; }
+  if ((fx.inv || []).some(x => x[0] === '+')) out.push('🎒 eşya');
+  if (Object.values(fx.npc || {}).some(v => v > 0)) out.push('❤️ dostluk');
+  if (Object.keys(fx.flag || {}).some(k => IMPORTANT_FLAGS.includes(k))) out.push('✨ ileride işe yarar');
+  if (fx.uyum) out.push('💞 uyum');
+  const gos = [ch.go, ch.goF].filter(g => typeof g === 'string');
+  if (gos.some(g => g.startsWith('END:'))) out.push('🏁 bir son');
+  else if (gos.some(g => SPECIAL_GO.includes(g))) out.push('🚪 yeni yol');
+  return out.length ? out : ['· sıradan'];
+}
 const inDis = () => isGame(G.P) && G.P.dis && G.P.dis.step === G.P.step;
 function validHand(t){ const P = G.P; return !!(t && inDis() && t.step === P.step && t.round === P.dis.round && validThrow(t.h)); }
 const myHand = () => validHand(G.T[G.me]) ? G.T[G.me].h : null;
@@ -182,7 +207,7 @@ const validAns = t => inMini() && validAnsFor(G.P, t);
 const myAns = () => validAns(G.A[G.me]) ? G.A[G.me].a : null;
 const KIND_NAME = {tahmin:'Tahmin et', kim:'Kim daha çok?', ayni:'Aynı anda'};
 const poss = n => n + "'in";
-const partnerVoted = () => validVote(G.V[other(G.me)]);
+const partnerVoted = () => validVote(G.V[other(G.me)], other(G.me));
 function seenStep(P){
   const s = LS.get('seen', null);
   if (s && s.seed === P.seed) return s.step;
@@ -284,7 +309,7 @@ function updateHUD(){
     const el = $(s), sp = $('span', el);
     if (sp.textContent !== String(v)){ sp.textContent = v; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   });
-  const b = $('#bInv'); b.textContent = P.inv.length; b.classList.toggle('hidden', !P.inv.length);
+  const b = $('#bInv'); b.textContent = P.inv.length; b.classList.toggle('hidden', !P.inv.length); updateDock();
   $('#btnSound').textContent = Sound.on ? '🔊' : '🔇';
 }
 function playerStatus(p){
@@ -298,7 +323,7 @@ function playerStatus(p){
   }
   const peer = partnerPeer();
   const online = !!peer;
-  if (G.view === 'scene' && isGame(P) && validVote(G.V[p])) return 'Kararını verdi ✓';
+  if (G.view === 'scene' && isGame(P) && validVote(G.V[p], p)) return 'Kararını verdi ✓';
   if (G.view === 'rps' && validHand(G.T[p])) return 'Hamlesini yaptı ✓';
   if (G.view === 'mini' && validAns(G.A[p])) return 'Cevapladı ✓';
   if (!G.room) return G.view === 'scene' ? 'Bekleniyor…' : '';
@@ -315,7 +340,7 @@ function playerStatus(p){
 }
 function chipHTML(p, cls = ''){
   const me = p === G.me, online = me || !!partnerPeer();
-  const voted = (G.view === 'scene' && validVote(G.V[p])) || (G.view === 'rps' && validHand(G.T[p])) || (G.view === 'mini' && validAns(G.A[p]));
+  const voted = (G.view === 'scene' && validVote(G.V[p], p)) || (G.view === 'rps' && validHand(G.T[p])) || (G.view === 'mini' && validAns(G.A[p]));
   return `<div class="pchip ${p} ${me ? 'me' : ''} ${voted ? 'voted' : ''} ${cls}">
     <div class="av">${AV[p]}<i class="dot ${online && (G.room || me) ? 'on' : ''}"></i></div>
     <div class="txt"><div class="nm">${NAMES[p]}${me ? ' <small style="opacity:.7;font-weight:500">(sen)</small>' : ''}</div><div class="st">${esc(playerStatus(p))}</div></div></div>`;
@@ -346,7 +371,7 @@ function decide(){
 function show(view, key){
   if (G.view === view && G.viewKey === key){ patch(); return; }
   G.run++; G.fast = false; G.skip = null;
-  G.view = view; G.viewKey = key; G.sel = null; G.hsel = null; G.asel = null;
+  G.view = view; G.viewKey = key; G.sel = null; G.hsel = null; G.asel = null; G.useSans = false;
   closeSheet();
   ({pick:viewPick, title:viewTitle, chapter:viewChapter, mission:viewMission, scene:viewScene, rps:viewRps, mini:viewMini, reveal:viewReveal, ending:viewEnding})[view]();
   updatePresence();
@@ -446,7 +471,7 @@ function viewMission(){
 function choiceHTML(ch, i, c, sc){
   const P = G.P, open = isOpen(ch, c), me = G.me;
   let tags = '';
-  if (!open) tags = `<span class="tag bad">🔒 ${esc(ch.rq || 'Kilitli')}</span>`;
+  if (!open) tags = `<span class="tag bad">🔒 ${esc(ch.rq || 'Kilitli')}</span>${hasJ('maymun') && !sc.individual ? '<span class="tag mid">🗝️ Maymuncukla açılabilir</span>' : ''}`;
   else if (sc.individual) tags = `<span class="tag good">${STATS[ch.st][0]} ${STATS[ch.st][1]} +2</span>`;
   else {
     const mine = P.stats[me][ch.st], theirs = P.stats[other(me)][ch.st];
@@ -457,6 +482,7 @@ function choiceHTML(ch, i, c, sc){
       tags += `<span class="tag ${team >= .67 ? 'good' : team >= .34 ? 'mid' : 'bad'}">🎲 Zorluk ${chk.dc} · birlikte %${pct(team)} · tek %${pct(solo)}</span>`;
     }
   }
+  if (LS.get('keh', '') === P.seed + ':' + P.step) tags += prophecy(ch, c).map(t => `<span class="tag prop">🔮 ${esc(t)}</span>`).join('');
   return `<button class="choice ${open ? '' : 'locked'}" data-i="${i}" ${open ? '' : 'aria-disabled="true"'} style="animation-delay:${i * 70}ms">
     <span class="k">${open ? 'ABCDEF'[i] : '🔒'}</span>
     <span class="body"><span class="ct">${esc(ch.t)}</span>${ch.d ? `<span class="cd">${esc(ch.d)}</span>` : ''}<span class="tags">${tags}</span></span></button>`;
@@ -475,6 +501,7 @@ function viewScene(){
         ${G.readOnly ? `<div class="notice" style="margin:0 0 8px">Sadece izleyebilirsin: oy verme iznin yok.</div>` : ''}
         <div class="story" id="story"></div>
         <div class="tapnote" id="tapnote">Metni geçmek için dokun</div>
+        <div class="jokbar hidden" id="jokbar"></div>
         <div class="choices hidden" id="choices">${sc.choices.map((ch, i) => choiceHTML(ch, i, c, sc)).join('')}</div>
       </div>
       <div class="actionbar" id="ab"></div>
@@ -487,7 +514,7 @@ function viewScene(){
     if (run !== G.run) return;
     LS.set('typed', typedKey);
     $('#tapnote').remove();
-    $('#choices').classList.remove('hidden');
+    $('#choices').classList.remove('hidden'); $('#jokbar').classList.remove('hidden');
     $$('.choice', scEl).forEach(b => b.onclick = () => onChoice(+b.dataset.i));
     G.sel = myVote();
     patchScene();
@@ -495,14 +522,28 @@ function viewScene(){
   });
   patchScene();
 }
+function rerenderChoices(){
+  const P = G.P, sc = S[P.scene], c = ctxOf(P), box = $('#choices'); if (!box) return;
+  box.innerHTML = sc.choices.map((ch, i) => choiceHTML(ch, i, c, sc)).join('');
+  $$('.choice', box).forEach(b => { b.style.animation = 'none'; b.onclick = () => onChoice(+b.dataset.i); });
+  patchScene();
+}
 function onChoice(i){
   const P = G.P, ch = S[P.scene].choices[i];
   if (G.readOnly) return toast('Oy verme iznin yok.');
-  if (!isOpen(ch, ctxOf(P))){ Sound.play('bad'); toast('🔒 ' + (ch.rq || 'Bu seçenek kilitli')); return; }
+  if (!isOpen(ch, ctxOf(P))){
+    const mv = myVote();
+    if (mv === i) return;
+    if (hasJ('maymun') && !S[P.scene].individual && !(mv !== null && partnerVoted())){
+      confirmBox('🗝️ Maymuncuk kullanılsın mı?', `"${ch.t}" seçeneği senin için açılır ve kararın hemen kilitlenir. Joker bu oyunda bir daha kullanılamaz.`, () => { G.sel = i; castVote(i, 'maymun'); });
+      return;
+    }
+    Sound.play('bad'); toast('🔒 ' + (ch.rq || 'Bu seçenek kilitli')); return;
+  }
   if (myVote() !== null && myVote() !== i && partnerVoted()) return;
   if (myVote() !== null && myVote() === i) return;
   G.sel = i; Sound.play('select');
-  if (myVote() !== null) castVote(i); // kararı değiştirme
+  if (myVote() !== null) castVote(i, G.useSans && checkOf(ch, ctxOf(P)) ? 'sans' : null); // kararı değiştirme
   patchScene();
 }
 function patchScene(){
@@ -510,11 +551,31 @@ function patchScene(){
   const P = G.P, mv = myVote(), pv = partnerVoted(), partner = NAMES[other(G.me)];
   $$('.choice').forEach(b => b.classList.toggle('sel', +b.dataset.i === (mv !== null ? mv : G.sel)));
   if ($('#choices') && $('#choices').classList.contains('hidden')){ ab.innerHTML = `<div class="waitbox">📖 Hikâyeyi okuyorsun…</div>`; return; }
+  // joker çubuğu
+  const jb = $('#jokbar'), sc = S[P.scene], c = ctxOf(P);
+  if (jb){
+    const kehOn = LS.get('keh', '') === P.seed + ':' + P.step, peek = LS.get('peek', null);
+    const peekOn = peek && peek.k === P.seed + ':' + P.step;
+    const selCh = G.sel !== null ? sc.choices[G.sel] : null, selChk = selCh && !sc.individual ? checkOf(selCh, c) : null;
+    let h = '';
+    if (!sc.individual && !G.readOnly){
+      if (hasJ('kehanet') && !kehOn) h += `<button class="jokbtn" id="jKeh">🔮 Kehanet</button>`;
+      if (hasJ('goz') && !peekOn && mv === null) h += `<button class="jokbtn" id="jGoz" ${pv ? '' : 'disabled'}>👀 Göz ucuyla${pv ? '' : ' · bekle'}</button>`;
+      if (hasJ('sans') && selChk && mv === null) h += `<button class="jokbtn ${G.useSans ? 'on' : ''}" id="jSans">🍀 Şans tılsımı ${G.useSans ? '✓ (+3)' : ''}</button>`;
+    }
+    if (peekOn) h += `<div class="peeknote">👀 ${esc(NAMES[other(G.me)])} şunu seçti: <b>${esc(peek.t)}</b></div>`;
+    if (mv !== null && G.V[G.me] && G.V[G.me].j === 'sans') h += `<div class="peeknote">🍀 Şans tılsımı bu kararda etkin.</div>`;
+    jb.innerHTML = h;
+    const k = $('#jKeh'); if (k) k.onclick = () => confirmBox('🔮 Kehanet kullanılsın mı?', 'Bu sahnedeki seçeneklerden hangisinin ileride işe yarayacak bir şey getirdiğini görürsün. Joker bir kez kullanılır.', async () => { if (await useInstant('kehanet')){ LS.set('keh', P.seed + ':' + P.step); rerenderChoices(); } });
+    const g = $('#jGoz'); if (g) g.onclick = () => confirmBox('👀 Göz ucuyla bakılsın mı?', `${NAMES[other(G.me)]}'in bu sahnede ne seçtiğini görürsün. Joker bir kez kullanılır.`, async () => { const pvv = G.V[other(G.me)]; if (!pvv) return; if (await useInstant('goz')){ LS.set('peek', {k:P.seed + ':' + P.step, t:sc.choices[pvv.choice].t}); patchScene(); } });
+    const sn = $('#jSans'); if (sn) sn.onclick = () => { G.useSans = !G.useSans; Sound.play('select'); patchScene(); };
+    if (!selChk && G.useSans) G.useSans = false;
+  }
   if (G.readOnly){ ab.innerHTML = `<div class="waitbox">👀 İzleyici modundasın.</div>`; return; }
   if (mv === null){
     ab.innerHTML = `<div class="waitbox" style="flex:1.2">${pv ? `✅ <span><b>${partner}</b> kararını verdi. Sıra sende!</span>` : `🤔 <span>Bir seçenek seç ve kararını kilitle.</span>`}</div>
       <button class="btn violet small" id="lockBtn" ${G.sel === null || G.voting ? 'disabled' : ''}>🔒 Kilitle</button>`;
-    $('#lockBtn').onclick = () => { if (G.sel !== null) castVote(G.sel); };
+    $('#lockBtn').onclick = () => { if (G.sel !== null) castVote(G.sel, G.useSans && checkOf(S[P.scene].choices[G.sel], ctxOf(P)) ? 'sans' : null); };
   } else {
     const t = S[P.scene].choices[mv];
     ab.innerHTML = `<div class="waitbox"><span class="spin"></span><span>Kararın: <b>${esc(t.s)}</b><br>${esc(partner)} bekleniyor${pv ? '' : '. Fikrini değiştirebilirsin.'}</span></div>`;
@@ -522,12 +583,14 @@ function patchScene(){
   if (pv && mv === null && G.toastedStep !== P.step){ G.toastedStep = P.step; Sound.play('turn'); }
 }
 
-async function castVote(i){
+async function castVote(i, j){
   const P = G.P;
   if (!isGame(P) || G.readOnly || G.voting || P.scene === 'end') return;
-  if (!isOpen(S[P.scene].choices[i], ctxOf(P))) return;
+  if (!isOpen(S[P.scene].choices[i], ctxOf(P)) && !(j === 'maymun' && hasJ('maymun'))) return;
+  if (j === 'sans' && !hasJ('sans')) j = null;
   G.voting = true; patchScene();
-  try { await G.vref[G.me].set({step:P.step, choice:i}); Sound.play('lock'); }
+  const doc = {step:P.step, choice:i}; if (j) doc.j = j;
+  try { await G.vref[G.me].set(doc); Sound.play(j === 'maymun' ? 'win' : 'lock'); }
   catch(e){ writeErr(e); }
   G.voting = false; patchScene(); updatePlayers();
   tryAdvance();
@@ -545,16 +608,16 @@ async function tryAdvance(){
     try { await G.ref.set(mqAdvance(P, G.A.irem.a, G.A.cengiz.a, extra)); } catch(e){ G.advancing = -1; writeErr(e); }
     return;
   }
-  if (!validVote(G.V.irem) || !validVote(G.V.cengiz)) return;
+  if (!validVote(G.V.irem, 'irem') || !validVote(G.V.cengiz, 'cengiz')) return;
   const vi = G.V.irem.choice, vc = G.V.cengiz.choice, sc = S[P.scene];
   let N, key;
-  if (vi === vc || sc.individual){ key = P.step + ':r'; N = resolve(P, vi, vc); }
+  if (vi === vc || sc.individual){ key = P.step + ':r'; N = resolve(P, vi, vc, null, {irem:G.V.irem, cengiz:G.V.cengiz}); }
   else if (!inDis()){ key = P.step + ':d'; N = openDis(P, vi, vc); }
   else {
     if (!validHand(G.T.irem) || !validHand(G.T.cengiz)) return;
     key = P.step + ':h' + P.dis.round;
     const out = disAdvance(P, G.T.irem.h, G.T.cengiz.h);
-    N = out.state || resolve(P, P.dis.i, P.dis.c, out.resolve);
+    N = out.state || resolve(P, P.dis.i, P.dis.c, out.resolve, {irem:G.V.irem, cengiz:G.V.cengiz});
   }
   if (G.advancing === key) return;
   G.advancing = key;
@@ -587,6 +650,7 @@ function viewRps(){
         </div>
         <div class="hands">${Object.keys(HANDS).map(h => `<button class="hand" data-h="${h}"><span>${HANDS[h][0]}</span>${HANDS[h][1]}</button>`).join('')}</div>
         <button class="hand concede" data-h="katil">🤝 ${NAMES[op]}'in fikrine katıl</button>
+        ${hasJ('veto') ? `<button class="hand concede veto" data-h="veto">🛑 Veto jokerini kullan: kararın doğrudan geçsin</button>` : ''}
       </div>
       <div class="actionbar" id="ab"></div>
     </section>`;
@@ -604,12 +668,12 @@ function patchRps(){
   $$('.hand').forEach(b => { b.classList.toggle('sel', b.dataset.h === (mh || G.hsel)); b.disabled = !!mh; });
   if (G.readOnly){ ab.innerHTML = `<div class="waitbox">👀 İzleyici modundasın.</div>`; return; }
   if (!mh){
-    const lbl = G.hsel === 'katil' ? '🤝 Katıl' : G.hsel ? HANDS[G.hsel][0] + ' At!' : '✊ At!';
+    const lbl = G.hsel === 'katil' ? '🤝 Katıl' : G.hsel === 'veto' ? '🛑 Veto!' : G.hsel ? HANDS[G.hsel][0] + ' At!' : '✊ At!';
     ab.innerHTML = `<div class="waitbox" style="flex:1.2">${ph ? `✅ <span><b>${op}</b> hamlesini yaptı. Sıra sende!</span>` : `🤔 <span>Gizlice seç: taş, kağıt, makas… ya da katıl.</span>`}</div>
       <button class="btn violet small" id="throwBtn" ${!G.hsel || G.throwing ? 'disabled' : ''}>${lbl}</button>`;
     $('#throwBtn').onclick = () => { if (G.hsel) castHand(G.hsel); };
   } else {
-    ab.innerHTML = `<div class="waitbox"><span class="spin"></span><span>Hamlen: <b>${mh === 'katil' ? '🤝 Katıl' : HANDS[mh][0] + ' ' + HANDS[mh][1]}</b><br>${esc(op)} bekleniyor…</span></div>`;
+    ab.innerHTML = `<div class="waitbox"><span class="spin"></span><span>Hamlen: <b>${mh === 'katil' ? '🤝 Katıl' : mh === 'veto' ? '🛑 Veto' : HANDS[mh][0] + ' ' + HANDS[mh][1]}</b><br>${esc(op)} bekleniyor…</span></div>`;
   }
 }
 async function castHand(h){
@@ -708,20 +772,44 @@ function qBodyHTML(q, me){
   const head = `<div class="lead">${esc(qv.lead)}${q.custom ? ' <span class="tag mid">✍️ Sizin sorunuz</span>' : ''}</div><div class="qtext">${esc(qv.text)}</div>`;
   if (q.kind === 'refleks') return head + `<div class="reflex" id="rfx" role="button" tabindex="0"><span class="rfx-msg">Hazır olduğunda dokun</span><span class="rfx-big">🎯</span></div>`;
   if (q.kind === 'ciz' && me === q.sub) return head + `<canvas class="pad" id="pad" width="600" height="600"></canvas><div class="padbar"><button class="btn ghost small" id="padUndo">↶ Geri al</button><button class="btn ghost small" id="padClear">🗑️ Temizle</button></div>`;
+  const el = yariElim(q, me), ob = (o, i) => `<button class="qopt ${el.includes(i) ? 'elim' : ''}" data-a="${i}" ${el.includes(i) ? 'disabled' : ''}>${esc(o)}</button>`;
+  const yb = yariOK(q, me) && !el.length ? `<div class="jokbar"><button class="jokbtn" id="jYari">✂️ Yarı yarıya</button></div>` : el.length ? `<div class="jokbar"><div class="peeknote">✂️ İki yanlış şık elendi.</div></div>` : '';
   if (q.kind === 'ciz'){
     const dr = G.A[q.sub];
     if (!validAns(dr) || !dr.d) return head + `<div class="waitdraw"><span class="spin"></span> ${esc(NAMES[q.sub])} çiziyor…</div>`;
     return head + `<canvas class="pad view" id="guessCv" width="600" height="600" data-d="${esc(dr.d)}" data-anim="1"></canvas>
-      <div class="qopts" id="guessReady">${opts.map((o, i) => `<button class="qopt" data-a="${i}">${esc(o)}</button>`).join('')}</div>`;
+      ${yb}<div class="qopts" id="guessReady">${opts.map(ob).join('')}</div>`;
   }
-  return head + `<div class="qopts ${q.kind === 'kim' ? 'two' : ''}">${opts.map((o, i) => `<button class="qopt" data-a="${i}">${esc(o)}</button>`).join('')}</div>`;
+  return head + yb + `<div class="qopts ${q.kind === 'kim' ? 'two' : ''}">${opts.map(ob).join('')}</div>`;
+}
+// ✂️ Yarı yarıya: tahmin edenin, karşı taraf cevapladıktan sonra iki yanlışı elemesi
+function yariCorrect(q, me){
+  if (!q || me === q.sub || !q.sub) return null;
+  if (q.kind === 'ciz') return Number.isInteger(q.c) ? q.c : null;
+  if (q.kind === 'tahmin'){ const a = G.A[q.sub]; return validAns(a) ? a.a : null; }
+  return null;
+}
+const yariKey = () => G.P.seed + ':' + G.P.step + ':' + G.P.mq.k;
+function yariOK(q, me){ return !G.readOnly && hasJ('yari') && myAns() === null && yariCorrect(q, me) !== null && qOpts(q).length >= 3; }
+function yariElim(q, me){ const y = LS.get('yari', null); return (y && y.k === yariKey() && yariCorrect(q, me) !== null) ? y.e : []; }
+function wireYari(q){
+  const b = $('#jYari'); if (!b) return;
+  b.onclick = () => confirmBox('✂️ Yarı yarıya kullanılsın mı?', 'İki yanlış şık elenir. Joker bu oyunda bir kez kullanılır.', async () => {
+    const cor = yariCorrect(q, G.me); if (cor === null) return;
+    const n = qOpts(q).length, wrong = []; for (let i = 0; i < n; i++) if (i !== cor) wrong.push(i);
+    const r = rngFor(G.P.seed + ':yari', G.P.step * 10 + G.P.mq.k);
+    for (let i = wrong.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [wrong[i], wrong[j]] = [wrong[j], wrong[i]]; }
+    const e = wrong.slice(0, Math.min(2, n - 2));
+    if (await useInstant('yari', {k:G.P.mq.k})){ LS.set('yari', {k:yariKey(), e}); if (e.includes(G.asel)) G.asel = null; const qc = $('#qc'); if (qc){ qc.innerHTML = qBodyHTML(q, G.me); wireQBody(q); patchMini(); } }
+  });
 }
 let PAD = null;
 function wireQBody(q){
   hydrateDrawings($('#qc'));
+  wireYari(q);
   $$('.qopt').forEach(b => b.onclick = () => {
     if (G.readOnly) return toast('Oynama iznin yok.');
-    if (myAns() !== null) return;
+    if (myAns() !== null || b.disabled) return;
     G.asel = +b.dataset.a; Sound.play('select'); patchMini();
   });
   if (q.kind === 'ciz' && q.sub === G.me && $('#pad')){
@@ -851,6 +939,7 @@ function viewRevealMini(){
     const perfect = L.matches === L.total;
     const b = add(`<div class="banner ${L.matches * 2 >= L.total ? 'agree' : 'dis'}">🎯 ${L.matches} / ${L.total}<small>${perfect ? 'Kusursuz! Birbirinizi ezbere biliyorsunuz.' : L.matches * 2 >= L.total ? 'Güzel uyum!' : 'Daha çok konuşmanız lazım…'}</small></div>`);
     Sound.play(perfect ? 'win' : L.matches ? 'good' : 'bad'); if (perfect){ burst(b, '💞', 14); confetti(30); }
+    const jlm = jokUsesFor(L); if (jlm.length) add(`<div class="joklist">${jlm.map(u => `<span class="jokchip ${u.p}">🃏 ${esc(NAMES[u.p])}: ${JOKERS[u.t].i} ${esc(JOKERS[u.t].n)}</span>`).join('')}</div>`);
     await beat(600); if (!alive()) return;
     const n = add(`<div class="narr"></div>`);
     await typeHTML(n, L.text); if (!alive()) return;
@@ -877,6 +966,12 @@ function viewRevealMini(){
 }
 
 // ---------- sonuç gösterimi ----------
+// bu adımda kullanılan jokerler: motorun kaydettikleri + anlık jokerler (kehanet, göz, yarı)
+function jokUsesFor(L){
+  const out = (L.jok || []).slice();
+  PL.forEach(p => jokLocalUsed(p).forEach(u => { if (u.step === L.step && !out.some(o => o.p === p && o.t === u.t)) out.push({p, t:u.t}); }));
+  return out.filter(u => JOKERS[u.t]);
+}
 function viewReveal(){
   if (G.P.last && G.P.last.kind === 'mini') return viewRevealMini();
   setChrome('game'); updateHUD();
@@ -916,10 +1011,15 @@ function viewReveal(){
       const b = add(`<div class="banner agree">💞 UYUM!<small>Aynı kararı verdiniz. Güçleriniz birleşiyor.</small></div>`);
       Sound.play('heart'); burst(b, '❤️', 12);
     } else {
-      const H = x => `${HANDS[x] ? HANDS[x][0] : '🤝'}`;
+      const H = x => `${HANDS[x] ? HANDS[x][0] : x === 'veto' ? '🛑' : '🤝'}`;
       const histHTML = hs => hs.length ? `<div class="rpshist">${hs.map((h, k) => `<span>Tur ${k + 1}: ${H(h.i)} vs ${H(h.c)}</span>`).join('')}</div>` : '';
       const crown = w => { const wc = $('#fc-' + w), lc = $('#fc-' + other(w)); wc.classList.add('win'); lc.classList.add('lose'); $('.inner', wc).insertAdjacentHTML('afterend', '<span class="crown">👑</span>'); };
-      if (L.concede){
+      if (L.veto){
+        const w = L.veto.w;
+        if (L.veto.hist.length > 1) add(histHTML(L.veto.hist.slice(0, -1)));
+        const b = add(`<div class="banner dis vetob">🛑 VETO!<small>${NAMES[w]} veto jokerini çaktı. Tartışma yok, ${NAMES[w]}'in kararı geçiyor!</small></div>`);
+        Sound.play('clash'); burst(b, '🛑', 8); crown(w);
+      } else if (L.concede){
         const k = L.concede, draws = k.hist.slice(0, -1);
         const b = add(`<div class="banner agree">🤝 İKNA!<small>${k.both ? 'İkiniz de birbirinizin fikrine katıldınız! Kura çekildi: ' : ''}${NAMES[k.by]}, ${NAMES[other(k.by)]}'in fikrine katıldı. Kaos yok, güçleriniz birleşiyor.</small></div>`);
         if (draws.length) add(histHTML(draws));
@@ -970,10 +1070,17 @@ function viewReveal(){
       }
     }
 
+    const jl = jokUsesFor(L);
+    if (jl.length){
+      await beat(400); if (!alive()) return;
+      add(`<div class="joklist">${jl.map(u => `<span class="jokchip ${u.p}">🃏 ${esc(NAMES[u.p])}: ${JOKERS[u.t].i} ${esc(JOKERS[u.t].n)}</span>`).join('')}</div>`);
+      Sound.play('win');
+    }
+
     if (L.check){
       await beat(700); if (!alive()) return;
       const k = L.check, max = Math.max(k.dc + 2, k.total + 1, 12);
-      add(`<div class="dicebox"><h4>${STATS[k.st][0]} ${STATS[k.st][1]} kontrolü <span>${k.team ? 'Takım gücü: ' + k.base : esc(NAMES[k.who]) + ' tek başına: ' + k.base}</span></h4>
+      add(`<div class="dicebox"><h4>${STATS[k.st][0]} ${STATS[k.st][1]} kontrolü <span>${k.team ? 'Takım gücü: ' + k.base : esc(NAMES[k.who]) + ' tek başına: ' + k.base}${k.bonus ? ' (🍀 +' + k.bonus + ')' : ''}</span></h4>
         <div class="check"><div class="die" id="dK">${dieHTML(1)}</div><div class="gauge">
           <div class="gbar"><div class="fill" id="gF"></div><div class="mark" style="left:${(k.dc / max) * 100}%"></div></div>
           <div class="gnums"><span id="gT">Güç ${k.base}</span><span>Hedef ${k.dc}</span></div></div><div id="stamp"></div></div></div>`);
@@ -1044,6 +1151,7 @@ function viewEnding(){
       <div class="en">Son ${ENDING_ORDER.indexOf(P.ending) + 1} / ${ENDING_ORDER.length}</div>
       <h2>${esc(E.t)}</h2>
       <div class="etext" id="etext"></div>
+      <div class="epi hidden" id="epi"><h3>⏳ Bir yıl sonra…</h3><div id="epit"></div></div>
       <div class="sumrow"><div class="sum"><b>${P.uyum}</b><span>💞 Uyum</span></div><div class="sum"><b>${P.kaos}</b><span>🌪️ Kaos</span></div><div class="sum"><b>${P.mqMatch || 0}/${P.mqTotal || 0}</b><span>🎯 Mini</span></div><div class="sum"><b>${P.log.length}</b><span>🎬 Hamle</span></div></div>
       <div id="emis"></div>
       <div id="erest" class="hidden">
@@ -1063,7 +1171,11 @@ function viewEnding(){
   if (isNew){ Sound.play('win'); confetti(80); }
   (async () => {
     await beat(isNew ? 900 : 0); if (run !== G.run) return;
-    await typeHTML($('#etext'), E.b + `<br><br><b>Mesafe ne kadar uzak olursa olsun, ortada bir yerde buluşmaya değer.</b> 💌`);
+    await typeHTML($('#etext'), E.b);
+    if (run !== G.run) return;
+    await beat(600); if (run !== G.run) return;
+    $('#epi').classList.remove('hidden'); Sound.play('chip');
+    await typeHTML($('#epit'), epilogue(P) + `<br><br><b>Mesafe ne kadar uzak olursa olsun, ortada bir yerde buluşmaya değer.</b> 💌`);
     if (run !== G.run) return;
     const box = $('#emis');
     box.insertAdjacentHTML('beforeend', `<h3>🤫 Gizli görevler açılıyor…</h3>`);
@@ -1116,6 +1228,16 @@ const SHEETS = {
     const m = MISSIONS[P.missions[G.me]];
     return `<div class="missioncard"><div class="big">🤫</div><h4>Sadece sen biliyorsun</h4><p>${esc(m ? m.t : '')}</p></div>
       <p style="font-size:13.5px;color:var(--soft);margin-top:12px">${NAMES[other(G.me)]}'in de bir gizli görevi var. Görevler birbirine ters düşebilir. Oyun sonunda ikisi de açılacak. Seçimlerini buna göre yap… ya da partnerini ikna et.</p>`;
+  }],
+  joker:['🃏 Jokerlerin', () => {
+    const P = G.P; if (!isGame(P)) return '';
+    const all = (P.jok && P.jok[G.me]) || [], av = myJokers().map(j => j.id);
+    const earned = (P.jokEarned && P.jokEarned[G.me]) || 0;
+    const rows = all.map(j => { const J = JOKERS[j.t], on = av.includes(j.id);
+      return `<div class="itemrow jokrow ${on ? '' : 'used'}"><span class="ie">${J.i}</span><div style="flex:1"><b>${esc(J.n)}${on ? '' : ' · kullanıldı'}</b><span>${esc(J.d)}</span><span class="jw">📍 ${esc(J.w)}</span></div></div>`; }).join('');
+    return (rows || `<div class="empty">🃏<br>Henüz jokerin yok.</div>`) +
+      (earned < 1 ? `<div class="itemrow jokrow locked"><span class="ie">❔</span><div style="flex:1"><b>İkinci joker</b><span>Bir mini oyunu kusursuz bitirerek ya da yolda karşınıza çıkan sürpriz bir olayla kazanılır.</span></div></div>` : '') +
+      `<p style="font-size:13px;color:var(--soft)">Jokerlerin ${esc(NAMES[other(G.me)])}'den gizli. Birini kullandığında ikiniz de görürsünüz. Her joker bir kez kullanılır.</p>`;
   }],
   yolculuk:['🗺️ Yolculuğunuz', () => {
     const P = G.P; if (!isGame(P)) return '';
@@ -1436,6 +1558,8 @@ function bootMsg(html){ $('#screen').innerHTML = `<div class="full" style="backg
   G.tref = {irem:db.doc(PATH.hand('irem')), cengiz:db.doc(PATH.hand('cengiz'))};
   G.aref = {irem:db.doc(PATH.ans('irem')), cengiz:db.doc(PATH.ans('cengiz'))};
   G.cref = db.doc(PATH.custom); G.albref = db.doc(PATH.album);
+  G.jref = {irem:db.doc(PATH.jok('irem')), cengiz:db.doc(PATH.jok('cengiz'))};
+  PL.forEach(p => G.jref[p].onSnapshot(snap => { G.Jk[p] = snap.exists ? snap.data() : null; updateDock(); if (G.ready && p !== G.me){ const u = jokLocalUsed(p), last = u[u.length - 1]; if (last && last.step === (G.P && G.P.step) && LS.get('jokann', '') !== G.P.seed + ':' + last.id){ LS.set('jokann', G.P.seed + ':' + last.id); toast(`🃏 ${NAMES[p]} bir joker kullandı: ${JOKERS[last.t].i} ${JOKERS[last.t].n}`); Sound.play('turn'); } } }, () => {}));
   G.cref.onSnapshot(snap => { const d = snap.exists ? snap.data() : null; G.C = {qs:(d && Array.isArray(d.qs)) ? d.qs.filter(q => q && q.id && q.t) : []}; }, () => {});
   G.albref.onSnapshot(snap => { const d = snap.exists ? snap.data() : null; G.ALB = {games:(d && Array.isArray(d.games)) ? d.games : []}; }, () => {});
 

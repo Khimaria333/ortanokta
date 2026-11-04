@@ -220,12 +220,12 @@ button{font:inherit;color:inherit}
 .lobby .pchip .dot{border-color:var(--paper2)}
 
 /* ---------- alt menü ---------- */
-#dock{flex:none;display:flex;justify-content:space-around;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:#170f2e;border-top:1px solid #ffffff14;z-index:6}
-#dock button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 8px;border-radius:12px;color:#cbbfe6;font-size:10.5px;font-weight:700;position:relative;min-width:44px}
+#dock{flex:none;display:flex;justify-content:space-between;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#170f2e;border-top:1px solid #ffffff14;z-index:6}
+#dock button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;border-radius:12px;color:#cbbfe6;font-size:10px;font-weight:700;position:relative;flex:1 1 0;min-width:0;justify-content:center;text-align:center}
 #dock button .i{font-size:19px;line-height:1.2}
 #dock button:active{background:#ffffff14}
 #dock button:focus-visible{outline:2px solid var(--gold)}
-#dock .badge{position:absolute;top:0;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--coral);color:#fff;font-size:10px;display:grid;place-items:center}
+#dock .badge{position:absolute;top:0;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--coral);color:#fff;font-size:10px;display:grid;place-items:center}
 
 /* ---------- alt sayfalar (sheet) ---------- */
 #sheet{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:#0b061a99;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -436,3 +436,23 @@ button{font:inherit;color:inherit}
 .badge.on .bi{filter:none;opacity:1}
 .ending .newbadges .badge{background:#fff7dd}
 .cardimg{display:block;width:100%;max-width:360px;margin:0 auto;border-radius:16px;box-shadow:0 8px 24px #0003}
+
+/* ---------- jokerler ---------- */
+.jokbar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.jokbar:empty{display:none}
+.jokbtn{border:1.5px dashed #c9a227;background:linear-gradient(135deg,#fff6d6,#ffe9a8);color:#6b4a00;font-weight:800;font-size:13px;border-radius:999px;padding:8px 13px;cursor:pointer;font-family:inherit}
+.jokbtn:disabled{opacity:.5;cursor:default}
+.jokbtn.on{border-style:solid;background:linear-gradient(135deg,#ffe07a,#ffc93c);box-shadow:0 0 0 3px rgba(255,201,60,.3)}
+.peeknote{flex:1 1 100%;background:#f3ecff;border:1px solid #d9c9ff;color:#4b2f8f;border-radius:12px;padding:8px 12px;font-size:13.5px}
+.tag.prop{background:#efe6ff;color:#5b34b3;border-color:#d6c4ff}
+.qopt.elim{opacity:.28;text-decoration:line-through;pointer-events:none;filter:grayscale(1)}
+.hand.veto{background:linear-gradient(135deg,#ffe1e1,#ffc4c4)!important;color:#8a1010!important;border-color:#e88!important}
+.banner.vetob{background:linear-gradient(135deg,#c62828,#ff6f61);color:#fff}
+.joklist{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.jokchip{background:linear-gradient(135deg,#fff3c4,#ffd86b);color:#5a3d00;font-weight:800;font-size:13px;border-radius:999px;padding:7px 12px;box-shadow:0 2px 6px rgba(0,0,0,.12);animation:pop .35s ease}
+.jokrow .jw{display:block;font-size:12px;color:#8a6d00;margin-top:3px}
+.jokrow.used{opacity:.45}
+.jokrow.locked{opacity:.7;border-style:dashed}
+.epi{margin:18px 0 6px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);text-align:left}
+.epi h3{margin:0 0 8px}
+.epi #epit{font-size:15px;line-height:1.55;color:#eee6ff}
