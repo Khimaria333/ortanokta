@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#170f2e">
+<meta name="description" content="İrem ile Cengiz'in iki telefondan birlikte oynadığı dallanan macera oyunu.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ortanokta">
+<title>Ortanokta Macerası</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="standalone.css">
+</head>
+<body>
+<div id="game">
+  <header id="hud" class="hidden">
+    <div class="chap"><b id="hudChap"></b><span id="hudSub"></span></div>
+    <div class="meter" id="mUyum" title="Uyum: aynı kararı verdiğiniz hamleler">💞 <span>0</span></div>
+    <div class="meter" id="mKaos" title="Kaos: anlaşamadığınız hamleler">🌪️ <span>0</span></div>
+    <button class="iconbtn" id="btnSound" aria-label="Sesi aç/kapat">🔊</button>
+    <button class="iconbtn" id="btnMenu" aria-label="Menü">☰</button>
+  </header>
+  <div id="players" class="hidden"></div>
+  <main id="screen"><div class="full" style="background:var(--night)"><div style="font-size:54px">🎈</div><p style="color:#cfc4ea">Yükleniyor…</p></div></main>
+  <nav id="dock" class="hidden" aria-label="Oyun menüsü">
+    <button data-sheet="karakter"><span class="i">👤</span>Karakter</button>
+    <button data-sheet="canta"><span class="i">🎒</span>Çanta<span class="badge hidden" id="bInv"></span></button>
+    <button data-sheet="dostlar"><span class="i">🤝</span>Dostlar</button>
+    <button data-sheet="gorev"><span class="i">🤫</span>Görev</button>
+    <button data-sheet="yolculuk"><span class="i">🗺️</span>Yolculuk</button>
+    <button id="btnReact"><span class="i">💬</span>Tepki</button>
+  </nav>
+  <div id="react" role="dialog" aria-label="Tepki gönder">
+    <button data-e="❤️">❤️</button><button data-e="😂">😂</button><button data-e="😱">😱</button>
+    <button data-e="🤔">🤔</button><button data-e="😘">😘</button><button data-e="👏">👏</button>
+    <button data-e="🐐">🐐</button><button class="nudge" id="btnNudge">👉 Dürt</button>
+  </div>
+  <div id="sheet"><div class="card" role="dialog" aria-modal="true">
+    <div class="grab"></div>
+    <div class="head"><h3 id="sheetTitle"></h3><button class="closeb" id="sheetClose" aria-label="Kapat">✕</button></div>
+    <div class="body" id="sheetBody"></div>
+  </div></div>
+  <div id="modal"><div class="box">
+    <h3 id="modalTitle"></h3><p id="modalText"></p>
+    <div class="row"><button class="btn ghost" id="modalNo">Vazgeç</button><button class="btn" id="modalYes">Evet</button></div>
+  </div></div>
+  <div id="fx"></div>
+  <div id="toast"></div>
+</div>
+<script src="config.js"></script>
+<script src="shim.js"></script>
+<script src="questions.js"></script>
+<script src="story.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
