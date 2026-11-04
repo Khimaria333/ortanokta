@@ -477,15 +477,15 @@ kesif:{ch:2, title:'Kasabayı Keşfet', art:'kasaba', sp:c=>(c.P.visits||0)===0 
    }
    return `${v === 1 ? 'İlk durak tamam!' : 'İkinci durak da tamam!'} Festivale kadar <b>${3 - v} durak</b> daha gezebilirsiniz. Sırada neresi var?`; },
  choices:[
-  {t:'Pazar yeri', d:'Lokumcular, pazarcı teyzeler ve eski bir fotoğraf makinesi.', s:'pazar yeri', st:'sa', req:c=>!c.f('v_pazar'), rq:'Buraya zaten gittiniz',
+  {t:'Pazar yeri', d:'Lokumcular, pazarcı teyzeler ve eski bir fotoğraf makinesi.', s:'pazar yeri', st:'sa', req:c=>!c.f('v_pazar'), rq:'Buraya zaten gittiniz', nokey:true,
    ok:`Kalabalığın ve bağırışların peşinden pazar yerine yürüyorsunuz.`, go:'pazar'},
-  {t:'Eski değirmen', d:'Kasabanın kenarında, gıcırdayan, biraz ürkütücü.', s:'eski değirmen', st:'ce', req:c=>!c.f('v_degirmen'), rq:'Buraya zaten gittiniz',
+  {t:'Eski değirmen', d:'Kasabanın kenarında, gıcırdayan, biraz ürkütücü.', s:'eski değirmen', st:'ce', req:c=>!c.f('v_degirmen'), rq:'Buraya zaten gittiniz', nokey:true,
    ok:`Kasabanın kenarındaki yıkık değirmene doğru yürüyorsunuz. Çarkın gıcırtısı uzaktan duyuluyor.`, go:'degirmen'},
-  {t:'Göl kenarı', d:'Sakin su, yaşlı bir balıkçı ve kuğu şeklinde bir tekne.', s:'göl kenarı', st:'ck', req:c=>!c.f('v_gol'), rq:'Buraya zaten gittiniz',
+  {t:'Göl kenarı', d:'Sakin su, yaşlı bir balıkçı ve kuğu şeklinde bir tekne.', s:'göl kenarı', st:'ck', req:c=>!c.f('v_gol'), rq:'Buraya zaten gittiniz', nokey:true,
    ok:`Söğütlerin arasından göle iniyorsunuz.`, go:'gol'},
-  {t:'Kahvehane', d:'Tavla şakırtıları ve kasabanın bütün dedikoduları.', s:'kahvehane', st:'ze', req:c=>!c.f('v_kahve'), rq:'Buraya zaten gittiniz',
+  {t:'Kahvehane', d:'Tavla şakırtıları ve kasabanın bütün dedikoduları.', s:'kahvehane', st:'ze', req:c=>!c.f('v_kahve'), rq:'Buraya zaten gittiniz', nokey:true,
    ok:`Tavla şakırtılarının geldiği kahvehaneye giriyorsunuz.`, go:'kahve'},
-  {t:'Kasaba kütüphanesi', d:'Tozlu raflar ve duvarda tuhaf bir fotoğraf.', s:'kütüphane', st:'ze', req:c=>!c.f('v_kutuphane'), rq:'Buraya zaten gittiniz',
+  {t:'Kasaba kütüphanesi', d:'Tozlu raflar ve duvarda tuhaf bir fotoğraf.', s:'kütüphane', st:'ze', req:c=>!c.f('v_kutuphane'), rq:'Buraya zaten gittiniz', nokey:true,
    ok:`Gıcırdayan kapıyı itip kütüphaneye giriyorsunuz.`, go:'kutuphane'}
  ]},
 
@@ -775,34 +775,42 @@ const JOKER_IDS = Object.keys(JOKERS);
 //  BİR YIL SONRA… (yolculuğa göre değişen epilog)
 // =====================================================================
 function epilogue(P){
-  const f = k => !!P.flags[k], has = i => P.inv.includes(i), n = k => P.npc[k] || 0, out = [];
+  const f = k => !!P.flags[k], has = i => P.inv.includes(i), out = [], E = P.ending;
+  // birlikte yaşadıkları sonlar: uzak mesafe bitti
+  const together = ['yerlesik', 'seyyah', 'zengin'].includes(E);
   // Profesör
-  if (P.ending === 'keci') out.push('Profesör iki şehir arasında o kadar çok yolculuk yaptı ki otobüs firması ona "yılın yolcusu" plaketi verdi.');
+  if (E === 'keci') out.push('Profesör iki şehir arasında o kadar çok yolculuk yaptı ki otobüs firması ona "yılın yolcusu" plaketi verdi.');
+  else if (E === 'seyyah') out.push('Profesör navigatörlükte o kadar iyi ki artık haritaları yemeden okuyabiliyor. Neredeyse.');
+  else if (E === 'zengin') out.push('Kaptan Profesör yatı iki kez karaya oturttu ama kimse ona kızamıyor.');
+  else if (E === 'yerlesik') out.push(has('profesor') ? 'Profesör pansiyonun bahçesine kendine bir kulübe yaptı. Kapısını yedi ama yine de içinde yaşıyor.' : 'Profesör kütüphaneden her gün pansiyona uğruyor ve bahçenizdeki çiçekleri tek tek kontrol ediyor (yiyerek).');
   else if (has('profesor')) out.push('Profesör her ay ikinize de aynı anda bir kartpostal yolluyor. Nasıl yaptığını kimse bilmiyor; zarfların hepsi biraz ısırılmış.');
   else out.push('Profesör hâlâ Ortanokta kütüphanesinde "onursal müdür" ve her ziyaretçiye sizi soruyor.');
-  // en yakın dost
+  // en yakın dost (sonla çelişmeyecek biçimde)
   const best = Object.entries(P.npc).sort((a, b) => b[1] - a[1])[0];
   const DOST = {
     ramazan:'Ramazan Abi taksisinin arka camına ikinizin fotoğrafını yapıştırdı; her yolcuya hikâyenizi anlatıyor.',
-    kediler:'Paşa her sabah pansiyonun penceresinde sizin geleceğiniz yolu gözlüyor. 14 kedi artık 19 oldu.',
-    gulizar:'Gülizar Hanım bu yıl turşu yarışmasını yine kazandı ve kürsüde "Bu kupayı İrem ile Cengiz\'e adıyorum" dedi.',
-    hayri:'Kaptan Hayri sonunda ehliyetini aldı ve balonunun adını "İrem & Cengiz" koydu.',
-    necmi:'Fikriye ile Necmi kasabaya geri döndü; kulübeyi "aşıklar için misafirhane" yaptılar ve ilk rezervasyon sizin adınıza.',
-    tahsin:'Başkan Tahsin her bayram size bir kutu fıstıklı lokum yolluyor. Kutunun üstünde "Casus olmadığınızı biliyordum" yazıyor.',
+    kediler: E === 'yerlesik' ? 'Paşa artık her sabah yatağınızın tam ortasında uyuyor. 14 kedi 19 oldu ve hepsi sizin pansiyonda.'
+      : E === 'kedi' ? 'Kedi krallığınız büyüyor: 14 kedi 19 oldu ve her biri sizin adınıza miyavlıyor.'
+      : 'Paşa her sabah pansiyonun penceresinde sizin geleceğiniz yolu gözlüyor. 14 kedi artık 19 oldu.',
+    gulizar: E === 'tursu' ? 'Gülizar Hanım genel müdürlükte o kadar başarılı ki turşularınız artık üç şehirde satılıyor.' : 'Gülizar Hanım bu yıl turşu yarışmasını yine kazandı ve kürsüde "Bu kupayı İrem ile Cengiz\'e adıyorum" dedi.',
+    hayri: E === 'seyyah' ? 'Kaptan Hayri sonunda ehliyetini aldı; artık dünyayı yasal olarak dolaşıyorsunuz.' : 'Kaptan Hayri sonunda ehliyetini aldı ve balonunun adını "İrem & Cengiz" koydu.',
+    necmi: E === 'varis' ? 'Fikriye ile Necmi her pazar sizi kahvaltıya çağırıyor ve efsanenin "gerçek" hâlini her seferinde biraz değiştirerek anlatıyor.' : E === 'yerlesik' ? 'Fikriye ile Necmi pansiyonun karşısındaki eve taşındı; akşamları dört kişi tavla oynuyorsunuz.' : 'Fikriye ile Necmi kasabaya geri döndü; kulübeyi "âşıklar için misafirhane" yaptılar ve ilk rezervasyon sizin adınıza.',
+    tahsin: E === 'yerlesik' ? 'Başkan Tahsin ortak muhtarlığınızı her toplantıda kıskançlıkla izliyor ama bayramlarda yine lokum getiriyor.' : 'Başkan Tahsin her bayram size bir kutu fıstıklı lokum yolluyor. Kutunun üstünde "Casus olmadığınızı biliyordum" yazıyor.',
     sevket:'Balıkçı Şevket gölde tuttuğu en büyük balığa sizin adınızı verdi. Balık bu fikre pek sıcak bakmıyor.'
   };
   if (best && best[1] >= 2 && DOST[best[0]]) out.push(DOST[best[0]]);
   // yolculuktan izler
-  if (has('altin') || f('sampiyon')) out.push('Altın Turşu Kupası, ikinizden birinin evinde başköşede duruyor; altı ayda bir kargoyla yer değiştiriyor.');
-  else if (f('jailed')) out.push('Ötenokta hapishanesindeki hücreniz artık bir müze: kapısında "Burada iki âşık üç gün tavla oynadı" yazıyor.');
-  else if (f('fenerDilek')) out.push('Fener Gecesi\'nde uçurduğunuz fener hiç geri gelmedi. İkiniz de dileğinizin yolda olduğuna inanıyorsunuz.');
+  if ((has('altin') || f('sampiyon')) && E !== 'tursu') out.push(together ? 'Altın Turşu Kupası evinizin başköşesinde duruyor; misafirlere ilk onu gösteriyorsunuz.' : 'Altın Turşu Kupası ikinizden birinin evinde başköşede duruyor; altı ayda bir kargoyla yer değiştiriyor.');
+  else if (f('jailed') && E !== 'hapis') out.push('Ötenokta hapishanesindeki hücreniz artık bir müze: kapısında "Burada iki âşık tavla oynadı" yazıyor.');
+  else if (f('fenerDilek') && E !== 'fener') out.push('Fener Gecesi\'nde uçurduğunuz fener hiç geri gelmedi. İkiniz de dileğinizin yolda olduğuna inanıyorsunuz.');
   else if (f('yavru')) out.push('Köfte Jr. büyüdü ve kasabanın en tombul kedisi oldu.');
-  else if (f('rode')) out.push('Balonla uçtuğunuz gün kasabanın kartpostallarına girdi; turistler hâlâ o kartpostalı alıyor.');
+  else if (f('rode') && E !== 'seyyah') out.push('Balonla uçtuğunuz gün kasabanın kartpostallarına girdi; turistler hâlâ o kartpostalı alıyor.');
   if (f('sir40')) out.push('Turist çiftin sözü aklınızda: "Kavga edince ilk kim gülerse o kazanır." İkiniz de hep ilk gülmeye çalışıyorsunuz.');
   // ilişkinin hâli
-  if (P.uyum >= 16) out.push('Telefonda konuşurken hâlâ aynı anda aynı cümleyi kuruyorsunuz. Artık şaşırmıyorsunuz bile.');
+  if (P.uyum >= 16) out.push(together ? 'Hâlâ aynı anda aynı cümleyi kuruyorsunuz; artık aynı masada. Şaşırmıyorsunuz bile.' : 'Telefonda konuşurken hâlâ aynı anda aynı cümleyi kuruyorsunuz. Artık şaşırmıyorsunuz bile.');
   else if (P.kaos >= 10) out.push('Hâlâ hiçbir konuda anlaşamıyorsunuz: film, yemek, keçi… Ama her tartışma bir kahkahayla bitiyor.');
   else out.push('Bazen anlaştınız, bazen taş-kağıt-makasla karar verdiniz. Ama en önemli konuda hep aynı fikirdeydiniz.');
-  out.push('Ve bir sonraki buluşmanın tarihi takvimde çoktan işaretli. 💌');
+  out.push(together ? 'Artık "bir sonraki buluşma" diye bir şey yok: her gün buluşuyorsunuz. 💌' : 'Ve bir sonraki buluşmanın tarihi takvimde çoktan işaretli. 💌');
   return out.join(' ');
 }
+const EPI_TOGETHER = ['yerlesik', 'seyyah', 'zengin'];

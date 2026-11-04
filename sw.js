@@ -1,6 +1,6 @@
 // Ortanokta Macerası · çevrimdışı açılış için önbellek (önce ağ, sonra önbellek)
-const CACHE = 'ortanokta-v14';
-const V = '?v=14';
+const CACHE = 'ortanokta-v15';
+const V = '?v=15';
 const SHELL = ['./', 'index.html', 'style.css' + V, 'standalone.css' + V, 'config.js' + V, 'shim.js' + V, 'questions.js' + V, 'story.js' + V, 'engine.js' + V, 'app.js' + V, 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, {cache:'reload'})))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

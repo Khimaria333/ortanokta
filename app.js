@@ -171,7 +171,7 @@ function validVote(v, p){
   const P = G.P;
   if (!v || !isGame(P) || P.scene === 'end' || v.step !== P.step || !Number.isInteger(v.choice)) return false;
   const ch = S[P.scene].choices[v.choice];
-  return !!ch && (isOpen(ch, ctxOf(P)) || (v.j === 'maymun' && !!p && !!jokFind(P, p, 'maymun')));
+  return !!ch && (isOpen(ch, ctxOf(P)) || (v.j === 'maymun' && !ch.nokey && !!p && !!jokFind(P, p, 'maymun')));
 }
 const myVote = () => validVote(G.V[G.me], G.me) ? G.V[G.me].choice : null;
 // ---------- jokerler (arayüz tarafı) ----------
@@ -471,7 +471,7 @@ function viewMission(){
 function choiceHTML(ch, i, c, sc){
   const P = G.P, open = isOpen(ch, c), me = G.me;
   let tags = '';
-  if (!open) tags = `<span class="tag bad">🔒 ${esc(ch.rq || 'Kilitli')}</span>${hasJ('maymun') && !sc.individual ? '<span class="tag mid">🗝️ Maymuncukla açılabilir</span>' : ''}`;
+  if (!open) tags = `<span class="tag bad">🔒 ${esc(ch.rq || 'Kilitli')}</span>${hasJ('maymun') && !sc.individual && !ch.nokey ? '<span class="tag mid">🗝️ Maymuncukla açılabilir</span>' : ''}`;
   else if (sc.individual) tags = `<span class="tag good">${STATS[ch.st][0]} ${STATS[ch.st][1]} +2</span>`;
   else {
     const mine = P.stats[me][ch.st], theirs = P.stats[other(me)][ch.st];
@@ -484,7 +484,7 @@ function choiceHTML(ch, i, c, sc){
   }
   if (LS.get('keh', '') === P.seed + ':' + P.step) tags += prophecy(ch, c).map(t => `<span class="tag prop">🔮 ${esc(t)}</span>`).join('');
   return `<button class="choice ${open ? '' : 'locked'}" data-i="${i}" ${open ? '' : 'aria-disabled="true"'} style="animation-delay:${i * 70}ms">
-    <span class="k">${open ? 'ABCDEF'[i] : '🔒'}</span>
+    <span class="k">${open ? String.fromCharCode(65 + i) : '🔒'}</span>
     <span class="body"><span class="ct">${esc(ch.t)}</span>${ch.d ? `<span class="cd">${esc(ch.d)}</span>` : ''}<span class="tags">${tags}</span></span></button>`;
 }
 function viewScene(){
@@ -534,7 +534,7 @@ function onChoice(i){
   if (!isOpen(ch, ctxOf(P))){
     const mv = myVote();
     if (mv === i) return;
-    if (hasJ('maymun') && !S[P.scene].individual && !(mv !== null && partnerVoted())){
+    if (hasJ('maymun') && !S[P.scene].individual && !ch.nokey && !(mv !== null && partnerVoted())){
       confirmBox('🗝️ Maymuncuk kullanılsın mı?', `"${ch.t}" seçeneği senin için açılır ve kararın hemen kilitlenir. Joker bu oyunda bir daha kullanılamaz.`, () => { G.sel = i; castVote(i, 'maymun'); });
       return;
     }
@@ -1175,7 +1175,7 @@ function viewEnding(){
     if (run !== G.run) return;
     await beat(600); if (run !== G.run) return;
     $('#epi').classList.remove('hidden'); Sound.play('chip');
-    await typeHTML($('#epit'), epilogue(P) + `<br><br><b>Mesafe ne kadar uzak olursa olsun, ortada bir yerde buluşmaya değer.</b> 💌`);
+    await typeHTML($('#epit'), epilogue(P) + (EPI_TOGETHER.includes(P.ending) ? `<br><br><b>Mesafe bitti. Macera daha yeni başlıyor.</b> 🏡` : `<br><br><b>Mesafe ne kadar uzak olursa olsun, ortada bir yerde buluşmaya değer.</b> 💌`));
     if (run !== G.run) return;
     const box = $('#emis');
     box.insertAdjacentHTML('beforeend', `<h3>🤫 Gizli görevler açılıyor…</h3>`);
