@@ -463,3 +463,21 @@ button{font:inherit;color:inherit}
 .picbtns{display:flex;gap:8px;justify-content:center;margin-top:4px}
 .picbtns .btn{flex:1 1 auto}
 .picbtns #picDel{flex:0 0 auto}
+
+/* ---------- deneme modu ---------- */
+#testbar{flex:none;display:flex;align-items:center;gap:8px;padding:5px 10px;background:repeating-linear-gradient(45deg,#ffd23f 0 12px,#ffc400 12px 24px);color:#3a2a00;font-weight:800;font-size:12px;z-index:30}
+#testbar .tb-me{flex:1;font-weight:700;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#testbar button{border:0;background:#3a2a00;color:#ffd23f;font-weight:800;font-size:12px;border-radius:999px;padding:5px 11px;font-family:inherit;cursor:pointer}
+.devpw{width:100%;box-sizing:border-box;font-size:22px;letter-spacing:.3em;text-align:center;padding:12px;border-radius:14px;border:2px solid #d9cdf0;font-family:inherit}
+.devseg{flex-wrap:wrap}
+.devseg button{flex:1 1 45%}
+.devnote{font-size:12.5px;color:var(--soft);margin:6px 0 10px}
+.devgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.devsel{width:100%;padding:11px 12px;border-radius:12px;border:2px solid #e3d9f3;font-size:15px;font-family:inherit;background:#fff;color:#2e2140}
+.devrow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid #f0e8fa;font-size:14px}
+.devrow span{flex:1}
+.devrow b{min-width:26px;text-align:center}
+.devrow button{width:34px;height:30px;border-radius:10px;border:1.5px solid #d9cdf0;background:#fff;font-size:18px;font-weight:800;color:#5b34b3;cursor:pointer}
+.devchips{display:flex;flex-wrap:wrap;gap:6px}
+.devchips button{border:1.5px solid #e3d9f3;background:#fff;border-radius:999px;padding:6px 10px;font-size:13px;font-family:inherit;color:#2e2140;cursor:pointer}
+.devchips button.on{background:#efe6ff;border-color:#9b7be0;font-weight:800}

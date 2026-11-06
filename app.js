@@ -10,9 +10,11 @@ const other = p => p === 'irem' ? 'cengiz' : 'irem';
 const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pct = x => Math.round(x * 100);
 
+let TEST = false; try { TEST = sessionStorage.getItem('ortanokta:testmode') === '1'; } catch(e){}
+const LSP = TEST ? 'ortanokta-test:' : 'ortanokta:';
 const LS = {
-  get(k, d){ try { const v = localStorage.getItem('ortanokta:' + k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
-  set(k, v){ try { localStorage.setItem('ortanokta:' + k, JSON.stringify(v)); } catch(e){} }
+  get(k, d){ try { const v = localStorage.getItem(LSP + k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(LSP + k, JSON.stringify(v)); } catch(e){} }
 };
 
 // =====================================================================
@@ -384,7 +386,7 @@ function show(view, key){
   if (G.view === view && G.viewKey === key){ patch(); return; }
   G.run++; G.fast = false; G.skip = null;
   G.view = view; G.viewKey = key; G.sel = null; G.hsel = null; G.asel = null; G.useSans = false;
-  closeSheet();
+  if (!(TEST && $('#sheetTitle').textContent.startsWith('🧪'))) closeSheet();
   ({pick:viewPick, title:viewTitle, chapter:viewChapter, mission:viewMission, scene:viewScene, rps:viewRps, mini:viewMini, reveal:viewReveal, ending:viewEnding})[view]();
   updatePresence();
 }
@@ -1289,7 +1291,7 @@ const SHEETS = {
   ayarlar:['⚙️ Ayarlar', () => `
       <div class="sec">Ses</div>
       <div class="seg"><button data-snd="1" class="${Sound.on ? 'on' : ''}">🔊 Açık</button><button data-snd="0" class="${Sound.on ? '' : 'on'}">🔇 Kapalı</button></div>
-      ${window.__room ? `<div class="sec">Oda</div>
+      ${window.__room && !TEST ? `<div class="sec">Oda</div>
       <div class="itemrow"><span class="ie">🔑</span><div style="flex:1"><b style="font-family:var(--font-h);font-size:20px;letter-spacing:.12em">${esc(window.__room.code || '')}</b><span>Partnerin bu kodla ya da linkle katılır.</span></div></div>
       <div class="seg"><button data-act="share">📤 Linki gönder</button><button data-act="leave">🚪 Odadan çık</button></div>` : ''}
       <div class="sec">Bu cihazda oynayan</div>
@@ -1303,7 +1305,9 @@ const SHEETS = {
         <button class="btn ghost" data-act="rozetler">🏅 Rozetler</button>
         ${isGame(G.P) ? `<button class="btn" data-act="new" ${G.readOnly ? 'disabled' : ''}>↺ Yeni macera başlat</button>` : ''}
       </div>
-      ${window.__BUILD ? `<p style="text-align:center;font-size:12px;color:var(--soft);margin:16px 0 0">Sürüm ${esc(window.__BUILD)}</p>` : ''}`]
+      <div class="sec">Geliştirici</div>
+      ${TEST ? `<button class="btn ghost" data-act="devpanel" style="width:100%">🧪 Deneme paneli</button>` : `<button class="btn ghost" data-act="devmode" style="width:100%">🧪 Deneme modu</button>`}
+      ${window.__BUILD ? `<p style="text-align:center;font-size:12px;color:var(--soft);margin:16px 0 0">Sürüm ${esc(window.__BUILD)}${TEST ? ' · deneme' : ''}</p>` : ''}`]
 };
 // ---------- kendi sorularımız, albüm, rozetler ----------
 const CQ_KIND = {tahmin:['🔮','Beni ne kadar tanıyorsun?','Kendinle ilgili bir soru yaz. Sen cevaplayacaksın, partnerin tahmin edecek.'],
@@ -1546,6 +1550,8 @@ function openSheet(name, keep){
     if (a === 'new') confirmBox('Yeni macera başlasın mı?', 'Şu anki oyun ikiniz için de sıfırlanır. Bulduğunuz sonlar galeride kalır.', startGame);
     else if (a === 'sorular' || a === 'album' || a === 'rozetler'){ openSheet(a); }
     else if (a === 'share') window.__room.share().then(r => { if (r === 'copied') toast('Link panoya kopyalandı.'); else if (r === 'fail') toast('Oda kodu: ' + window.__room.code); });
+    else if (a === 'devmode') devEnter();
+    else if (a === 'devpanel') openDev();
     else if (a === 'leave') confirmBox('Odadan çıkılsın mı?', 'Oyun silinmez; aynı kodla istediğin zaman geri dönebilirsin.', () => window.__room.leave());
     else openSheet(a);
   });
@@ -1645,12 +1651,226 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('click', e => { if (!e.target.closest('#react') && !e.target.closest('#btnReact')) $('#react').classList.remove('on'); });
 
+// =====================================================================
+//  🧪 DENEME MODU (şifreli, tek telefon + bot partner, gerçek odaya dokunmaz)
+// =====================================================================
+const DEV_HASH = 'e0b1755b7d26f2526d4e8c2b2da63442a177cf7cf080f01c14e7e41322d3b723';
+async function devCheck(pw){
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ortanokta:' + pw));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('') === DEV_HASH;
+  } catch(e){ return false; }
+}
+function devEnter(){
+  $('#sheetTitle').textContent = '🧪 Deneme modu';
+  $('#sheetBody').innerHTML = `<p style="margin-top:0">Gerçek oyununuza dokunmadan yenilikleri tek telefonda, bot bir partnerle denersin. Çıkınca kaldığın yere dönersin.</p>
+    <input id="devPw" type="password" inputmode="numeric" autocomplete="off" placeholder="Şifre" class="devpw">
+    <button class="btn violet" id="devGo" style="width:100%;margin-top:10px">Giriş</button>
+    <p class="sub" id="devErr" style="color:#c0392b;font-size:13px;min-height:18px"></p>`;
+  $('#sheet').classList.add('on');
+  const go = async () => {
+    const pw = $('#devPw').value.trim();
+    if (!(await devCheck(pw))){ $('#devErr').textContent = 'Şifre yanlış.'; Sound.play('bad'); return; }
+    try {
+      // kendi sorularınızı denemeye kopyala (yalnızca okuma)
+      const seed = {}; if (G.C && G.C.qs && G.C.qs.length) seed[PATH.custom] = {qs:G.C.qs};
+      sessionStorage.setItem('ortanokta:devdb', JSON.stringify(seed));
+      sessionStorage.setItem('ortanokta:testmode', '1');
+    } catch(e){ toast('Bu tarayıcıda deneme modu açılamadı.'); return; }
+    location.reload();
+  };
+  $('#devGo').onclick = go;
+  $('#devPw').onkeydown = e => { if (e.key === 'Enter') go(); };
+  setTimeout(() => $('#devPw').focus(), 80);
+}
+function devExit(){ try { sessionStorage.removeItem('ortanokta:testmode'); sessionStorage.removeItem('ortanokta:devdb'); } catch(e){} location.reload(); }
+
+// Bellekte çalışan sahte veritabanı (sekme kapanınca silinir)
+function memDB(){
+  let store = {}; try { store = JSON.parse(sessionStorage.getItem('ortanokta:devdb') || '{}') || {}; } catch(e){}
+  const subs = {};
+  const save = () => { try { sessionStorage.setItem('ortanokta:devdb', JSON.stringify(store)); } catch(e){} };
+  const snap = path => ({exists:store[path] !== undefined && store[path] !== null, data:() => store[path] == null ? null : JSON.parse(JSON.stringify(store[path])), metadata:{fromCache:false}});
+  const notify = path => setTimeout(() => (subs[path] || []).forEach(cb => { try { cb(snap(path)); } catch(e){ console.error(e); } }), 0);
+  return {
+    doc(path){ return {
+      async get(){ return snap(path); },
+      async set(d){ store[path] = d == null ? null : JSON.parse(JSON.stringify(d)); save(); notify(path); },
+      async acquire(){ return {acquired:true}; },
+      onSnapshot(cb){ (subs[path] = subs[path] || []).push(cb); setTimeout(() => cb(snap(path)), 0); return () => { subs[path] = subs[path].filter(x => x !== cb); }; }
+    }; },
+    reset(){ store = {}; save(); Object.keys(subs).forEach(notify); }
+  };
+}
+
+// ---------- bot partner ----------
+const BOT_MODES = {agree:['🤝','Anlaşan'], random:['🎲','Rastgele'], oppose:['😤','Karşı çıkan'], off:['⏸️','Kapalı']};
+G.botMode = LS.get('botMode', 'random');
+let botTimer = null, botKey = '';
+function botPlan(){
+  if (!TEST || G.botMode === 'off' || !G.ready || !G.me) return null;
+  const P = G.P, b = other(G.me), h = G.me;
+  if (!isGame(P) || P.scene === 'end' || G.readOnly) return null;
+  const rnd = n => Math.floor(Math.random() * n);
+  if (inDis()){
+    if (validHand(G.T[b])) return null;
+    const hands = ['tas', 'kagit', 'makas'];
+    const pick = G.botMode === 'agree' ? 'katil' : hands[rnd(3)];
+    return {key:'h' + P.step + ':' + P.dis.round, run:() => G.tref[b].set({step:P.step, round:P.dis.round, h:pick})};
+  }
+  if (inMini()){
+    if (validAns(G.A[b])) return null;
+    const q = P.mq.qs[P.mq.k], n = ansRange(P), ha = validAns(G.A[h]) ? G.A[h].a : null, key = 'a' + P.step + ':' + P.mq.k;
+    const ans = a => ({key, run:() => G.aref[b].set(Object.assign({step:P.step, k:P.mq.k, a}, q.kind === 'ciz' && q.sub === b ? {d:botDrawing()} : {}))});
+    if (q.kind === 'refleks') return ans(G.botMode === 'agree' ? 380 + rnd(200) : G.botMode === 'oppose' ? 1100 + rnd(600) : 300 + rnd(900));
+    if (q.kind === 'ciz'){
+      if (q.sub === b) return ans(q.c);
+      const dr = G.A[q.sub]; if (!validAns(dr) || !dr.d) return null;
+      return ans(G.botMode === 'agree' ? q.c : G.botMode === 'oppose' ? (q.c + 1) % n : rnd(n));
+    }
+    if (q.kind === 'tahmin' && q.sub === b) return ans(rnd(n));
+    if (G.botMode === 'random') return ans(rnd(n));
+    if (ha === null) return null;                       // insanın cevabını bekle
+    return ans(G.botMode === 'agree' ? ha : (ha + 1 + rnd(n - 1)) % n);
+  }
+  const sc = S[P.scene]; if (!sc || validVote(G.V[b], b)) return null;
+  const c = ctxOf(P), open = sc.choices.map((ch, i) => i).filter(i => isOpen(sc.choices[i], c));
+  if (!open.length) return null;
+  const hv = myVote(), key = 'v' + P.step;
+  let i;
+  if (sc.individual || G.botMode === 'random') i = open[rnd(open.length)];
+  else if (hv === null) return null;
+  else if (G.botMode === 'agree') i = open.includes(hv) ? hv : open[rnd(open.length)];
+  else { const o = open.filter(x => x !== hv); i = o.length ? o[rnd(o.length)] : hv; }
+  return {key, run:() => G.vref[b].set({step:P.step, choice:i})};
+}
+function botDrawing(){
+  const hx = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+  const circle = [], cx = 128, cy = 120;
+  for (let a = 0; a <= 40; a++){ const t = a / 40 * Math.PI * 2; circle.push(hx(cx + Math.cos(t) * 70) + hx(cy + Math.sin(t) * 70)); }
+  const smile = []; for (let a = 0; a <= 12; a++){ const t = Math.PI * (0.15 + a / 12 * 0.7); smile.push(hx(cx + Math.cos(t) * 40) + hx(cy + 10 + Math.sin(t) * 30)); }
+  return [circle.join(''), hx(100) + hx(100) + hx(102) + hx(104), hx(156) + hx(100) + hx(158) + hx(104), smile.join('')].join('|');
+}
+function botTick(){
+  const plan = botPlan();
+  if (!plan){ return; }
+  if (plan.key === botKey) return;
+  botKey = plan.key;
+  clearTimeout(botTimer);
+  botTimer = setTimeout(async () => { try { await plan.run(); } catch(e){ console.error(e); } }, 700 + Math.random() * 900);
+}
+
+// ---------- deneme paneli ----------
+const DEV_CH_ORDER = [0, 1, 2, 3, 4, '4b', 5, '5b', 6, '6b'];
+const DEV_MINI = [['tahmin','irem','Tahmin et (İrem cevaplar)'], ['tahmin','cengiz','Tahmin et (Cengiz cevaplar)'], ['kim',null,'Kim daha çok?'], ['ayni',null,'Aynı cevap'], ['ciz','irem','Çiz-bil (İrem çizer)'], ['ciz','cengiz','Çiz-bil (Cengiz çizer)'], ['refleks',null,'Refleks']];
+S.__mt = {ch:'test', title:'Mini Oyun Testi', art:'festival', sp:'sunucu', choices:[], mini:{qs:[['kim']],
+  intro:`🧪 Deneme turu. Bu soru sadece bu test için.`,
+  reward:(m, n) => ({fx:null, text:`🧪 Test bitti: ${n} soruda ${m} eşleşme.`})}, go:c => c.P.mtRet && S[c.P.mtRet] ? c.P.mtRet : 'festival'};
+CH.test = 'Deneme · Mini Oyun Testi'; CH_SUB.test = 'Sadece deneme modunda görünür.';
+async function devWrite(fn){
+  let N = isGame(G.P) ? clone(G.P) : newGame(null, G.C.qs);
+  const r = fn(N); if (r) N = r;
+  try { await G.ref.set(N); } catch(e){ writeErr(e); }
+}
+function devJump(id){
+  return devWrite(N => {
+    N.step++; N.last = null; N.dis = null; N.mq = null; N.from = null; N.ending = null; N.evtRet = null;
+    if (S[id].event) N.evtRet = 'kesif';
+    transition(N, id, []);
+  });
+}
+function devMini(kind, sub){
+  return devWrite(N => {
+    S.__mt.mini.qs = [[kind, sub]];
+    N.mtRet = N.scene && N.scene !== 'end' && N.scene !== '__mt' ? N.scene : 'festival';
+    N.step++; N.last = null; N.dis = null; N.mq = null; N.from = null; N.ending = null;
+    transition(N, '__mt', []);
+  });
+}
+function devEnding(k){ return devWrite(N => { N.step++; N.last = null; N.dis = null; N.mq = null; N.scene = 'end'; N.ending = k; if (!N.found.includes(k)) N.found.push(k); }); }
+function devSheet(){
+  const P = G.P, on = isGame(P);
+  const groups = DEV_CH_ORDER.map(ch => [ch, Object.keys(S).filter(id => S[id].ch === ch)]).concat([['olay', Object.keys(S).filter(id => S[id].event)]]);
+  const sceneOpts = groups.map(([ch, ids]) => `<optgroup label="${esc(ch === 'olay' ? 'Rastgele olaylar' : (CH[ch] || ('Bölüm ' + ch)))}">${ids.map(id => `<option value="${id}" ${on && P.scene === id ? 'selected' : ''}>${esc(S[id].title)}${S[id].mini ? ' 🎯' : ''}</option>`).join('')}</optgroup>`).join('');
+  const st = (lbl, k, v) => `<div class="devrow"><span>${lbl}</span><button data-dv="${k}:-1">−</button><b>${v}</b><button data-dv="${k}:1">+</button></div>`;
+  return `
+    <div class="sec">Bot partner (${esc(NAMES[other(G.me)])})</div>
+    <div class="seg devseg">${Object.entries(BOT_MODES).map(([k, [i, n]]) => `<button data-bot="${k}" class="${G.botMode === k ? 'on' : ''}">${i} ${n}</button>`).join('')}</div>
+    <p class="sub devnote">Anlaşan: senin seçtiğini seçer, taş-kağıt-makasta katılır. Karşı çıkan: hep başka şeyi seçer.</p>
+    <button class="btn ghost" data-dev="swap" style="width:100%">⇄ ${esc(NAMES[other(G.me)])} olarak oyna</button>
+    <div class="sec">Oyun</div>
+    <div class="devgrid"><button class="btn ghost small" data-dev="new">🆕 Yeni test oyunu</button><button class="btn ghost small" data-dev="reset">🗑️ Her şeyi sıfırla</button></div>
+    <div class="sec">Sahneye atla</div>
+    <select id="devScene" class="devsel">${sceneOpts}</select>
+    <button class="btn violet small" data-dev="jump" style="width:100%;margin-top:8px">➜ Bu sahneye git</button>
+    <div class="sec">Mini oyun testi</div>
+    <select id="devMini" class="devsel">${DEV_MINI.map(([k, s, l], i) => `<option value="${i}">${esc(l)}</option>`).join('')}</select>
+    <button class="btn violet small" data-dev="mini" style="width:100%;margin-top:8px">🎯 Tek soru oyna</button>
+    <div class="sec">Son önizleme</div>
+    <select id="devEnd" class="devsel">${ENDING_ORDER.map((k, i) => `<option value="${k}">${i + 1}. ${ENDINGS[k].i} ${esc(ENDINGS[k].t)}</option>`).join('')}</select>
+    <button class="btn violet small" data-dev="end" style="width:100%;margin-top:8px">🏁 Bu sonu göster</button>
+    ${on ? `<div class="sec">Durum</div>
+    ${st('💞 Uyum', 'uyum', P.uyum)}${st('🌪️ Kaos', 'kaos', P.kaos)}
+    ${Object.keys(NPCS).map(k => st(NPCS[k].e + ' ' + NPCS[k].n, 'npc.' + k, P.npc[k] || 0)).join('')}
+    <div class="sec">Çanta</div>
+    <div class="devchips">${Object.keys(ITEMS).map(k => `<button data-it="${k}" class="${P.inv.includes(k) ? 'on' : ''}">${ITEMS[k].e} ${esc(ITEMS[k].n)}</button>`).join('')}</div>
+    <div class="sec">Joker ver (${esc(NAMES[G.me])})</div>
+    <div class="devchips">${JOKER_IDS.map(t => `<button data-jk="${t}">${JOKERS[t].i} ${esc(JOKERS[t].n)}</button>`).join('')}</div>` : ''}
+    <div class="sec">Çıkış</div>
+    <button class="btn" data-dev="exit" style="width:100%">✖ Deneme modundan çık</button>`;
+}
+function openDev(){
+  $('#sheetTitle').textContent = '🧪 Deneme paneli';
+  const sb = $('#sheetBody'), y = $('#sheet').classList.contains('on') ? sb.scrollTop : 0;
+  sb.innerHTML = devSheet(); $('#sheet').classList.add('on'); sb.scrollTop = y;
+  const re = () => setTimeout(openDev, 120);
+  $$('[data-bot]').forEach(b => b.onclick = () => { G.botMode = b.dataset.bot; LS.set('botMode', G.botMode); botKey = ''; Sound.play('select'); openDev(); botTick(); updateTestBar(); });
+  $$('[data-dev]').forEach(b => b.onclick = async () => {
+    const a = b.dataset.dev;
+    if (a === 'swap'){ closeSheet(); devSwap(); }
+    else if (a === 'new'){ closeSheet(); await devWrite(() => newGame(isGame(G.P) ? G.P : null, G.C.qs)); }
+    else if (a === 'reset'){ closeSheet(); G.db.reset(); LS.set('seen', null); LS.set('chap', null); toast('Deneme verisi sıfırlandı.'); }
+    else if (a === 'jump'){ closeSheet(); await devJump($('#devScene').value); }
+    else if (a === 'mini'){ const m = DEV_MINI[+$('#devMini').value]; closeSheet(); await devMini(m[0], m[1]); }
+    else if (a === 'end'){ const k = $('#devEnd').value; closeSheet(); await devEnding(k); }
+    else if (a === 'exit') devExit();
+  });
+  $$('[data-dv]').forEach(b => b.onclick = async () => {
+    const [k, d] = b.dataset.dv.split(':'), dv = +d;
+    await devWrite(N => { if (k.startsWith('npc.')){ const n = k.slice(4); N.npc[n] = (N.npc[n] || 0) + dv; } else N[k] = Math.max(0, (N[k] || 0) + dv); });
+    Sound.play('tap'); re();
+  });
+  $$('[data-it]').forEach(b => b.onclick = async () => {
+    const k = b.dataset.it;
+    await devWrite(N => { N.inv = N.inv.includes(k) ? N.inv.filter(x => x !== k) : N.inv.concat(k); });
+    Sound.play('tap'); re();
+  });
+  $$('[data-jk]').forEach(b => b.onclick = async () => {
+    const t = b.dataset.jk;
+    await devWrite(N => { N.jok = N.jok || {irem:[], cengiz:[]}; N.jok[G.me] = N.jok[G.me] || []; N.jok[G.me].push({id:G.me[0] + 'd' + Date.now().toString(36) + t, t}); });
+    toast(`${JOKERS[t].i} ${JOKERS[t].n} verildi.`); Sound.play('win'); re();
+  });
+}
+function devSwap(){
+  const p = other(G.me); G.me = p; LS.set('who', p); botKey = ''; G.view = null; G.sel = null;
+  toast(`${AV[p]} Artık ${NAMES[p]} olarak oynuyorsun.`); Sound.play('turn');
+  updateTestBar(); updateDock(); decide(); botTick();
+}
+function updateTestBar(){
+  if (!TEST) return;
+  let bar = $('#testbar');
+  if (!bar){ bar = document.createElement('div'); bar.id = 'testbar'; $('#game').prepend(bar); }
+  bar.innerHTML = `<span>🧪 DENEME</span><span class="tb-me">${AV[G.me] || ''} ${esc(NAMES[G.me] || '')} · bot ${BOT_MODES[G.botMode][0]}</span><button id="tbSwap">⇄</button><button id="tbPanel">Panel</button>`;
+  $('#tbSwap').onclick = devSwap; $('#tbPanel').onclick = openDev;
+}
+
 function bootMsg(html){ $('#screen').innerHTML = `<div class="full" style="background:var(--night)">${html}</div>`; }
 
 (async () => {
   bootMsg(`<div style="font-size:54px" class="a-bob">🎈</div><p style="color:#cfc4ea;font-weight:700">Ortanokta'ya bağlanılıyor…</p>`);
   let db = null;
-  try { db = await claude.use('db'); } catch(e){ db = null; }
+  if (TEST) db = memDB();
+  else { try { db = await claude.use('db'); } catch(e){ db = null; } }
   if (!db){
     bootMsg(window.__STANDALONE
       ? `<div style="font-size:54px">📡</div><h2 style="font-family:var(--font-h)">Bağlantı kurulamadı</h2><p style="color:#cfc4ea">İnternet bağlantını kontrol edip uygulamayı yeniden aç.</p><button class="btn" style="flex:none;margin-top:12px" onclick="location.reload()">Tekrar dene</button>`
@@ -1659,13 +1879,14 @@ function bootMsg(html){ $('#screen').innerHTML = `<div class="full" style="backg
   }
   G.db = db;
   let user = null;
-  try { user = await claude.use('user'); } catch(e){}
+  if (!TEST){ try { user = await claude.use('user'); } catch(e){} }
   G.user = user;
   if (user){
     try { if (typeof user.can === 'function'){ const w = await user.can('data.write'); if (w === false) G.readOnly = true; } } catch(e){}
   }
   // Otomatik tanıma yok: her cihaz kim olduğunu kendisi seçer (seçim bu cihazda hatırlanır)
-  const saved = LS.get('who', null);
+  let saved = LS.get('who', null);
+  if (TEST && saved !== 'irem' && saved !== 'cengiz'){ try { saved = JSON.parse(localStorage.getItem('ortanokta:who')); } catch(e){} if (saved !== 'irem' && saved !== 'cengiz') saved = 'cengiz'; LS.set('who', saved); }
   if (saved === 'irem' || saved === 'cengiz') G.me = saved;
 
   G.ref = db.doc(PATH.state);
@@ -1712,6 +1933,7 @@ function bootMsg(html){ $('#screen').innerHTML = `<div class="full" style="backg
     tryAdvance();
   }, () => {}));
 
+  if (TEST){ G.room = null; updateTestBar(); setInterval(botTick, 400); return; }
   try { G.room = await claude.use('room'); } catch(e){ G.room = null; }
   if (G.room){ wireRoom(); updatePresence(); }
 })();
