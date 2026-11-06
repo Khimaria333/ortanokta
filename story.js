@@ -476,8 +476,8 @@ const VISIT = loc => ({flag:{['v_' + loc]:1}, visit:1});
 
 Object.assign(S, {
 taksi_sohbet:{ch:1, title:'Taksi Sohbeti', art:'kasaba', sp:'ramazan', choices:[],
- mini:{qs:[['tahmin','irem'],['tahmin','cengiz']],
-  intro:`Ramazan Abi dikiz aynasından bakıp gülümsüyor:<br><br><i>"Yol uzun, biraz sohbet edelim. Bakalım birbirinizi ne kadar tanıyorsunuz! Biriniz kendisi için cevaplasın, öbürü tahmin etsin."</i>`,
+ mini:{qs:[['tahmin','irem'],['bumu'],['tahmin','cengiz']], th:'yol',
+  intro:`Ramazan Abi dikiz aynasından bakıp gülümsüyor:<br><br><i>"Yol uzun, biraz sohbet edelim. Bakalım birbirinizi ne kadar tanıyorsunuz! Biriniz kendisi için cevaplasın, öbürü tahmin etsin. Arada da hızlı bir \"Bu mu, şu mu?\" turu yapacağız!"</i>`,
   reward:(m, n) => m === n
    ? {fx:{npc:{ramazan:2}, uyum:1}, text:`Ramazan Abi direksiyonu yumrukluyor: "İşte gerçek aşk bu!" Taksimetreyi kapatıp bütün yol size eski Ortanokta türküleri söylüyor.`}
    : m > 0 ? {fx:{npc:{ramazan:1}}, text:`"Fena değil, fena değil," diyor Ramazan Abi. "Ama daha çok konuşun. Ben eşimle kırk yıldır konuşuyorum, hâlâ bitmedi."`}
@@ -573,8 +573,8 @@ kutuphane:{ch:2, title:'Kasaba Kütüphanesi', art:'kutuphane', sp:'saadet', onE
  ]},
 
 isinma:{ch:3, title:'Çiftler Isınma Turu', art:'festival', sp:'sunucu', choices:[],
- mini:{qs:[['kim'],['ciz','irem'],['kim'],['ciz','cengiz']],
-  intro:`Meydanda mikrofon cızırdıyor. Sunucu Necati sahnede:<br><br><i>"Festivale çiftler ısınma turuyla başlıyoruz! İki oyunumuz var: önce soruyorum, ikiniz de aynı anda cevaplıyorsunuz. KİM DAHA ÇOK…? Sonra da çizim yarışması: biriniz çizecek, öbürü bilecek!"</i>`,
+ mini:{qs:[['ciz','irem'],['kim'],['emoji','cengiz'],['refleks']],
+  intro:`Meydanda mikrofon cızırdıyor. Sunucu Necati sahnede:<br><br><i>"Festivale çiftler ısınma turuyla başlıyoruz! Önce çizim: biriniz çizecek, öbürü bilecek! Sonra KİM DAHA ÇOK…?, ardından emojiyle anlatma ve en sonunda Profesör\'ü yakalama refleks testi!"</i>`,
   reward:(m, n) => m === n
    ? {fx:{flag:{juri:1}, npc:{gulizar:1}, uyum:1}, text:`Hepsini bildiniz! Sunucu Necati mikrofonu düşürüyor. Jüri üyeleri birbirine bakıp not alıyor ve ön sıradaki Gülizar Hanım bile alkışlıyor. Jürinin gözüne girdiniz.`}
    : m >= Math.ceil(n / 2) ? {fx:{flag:{juri:1}}, text:`"Fena değil!" diye bağırıyor Necati. Jüri masasındakiler size gülümsüyor; turşu yarışmasında bu işinize yarayabilir.`}
@@ -582,7 +582,7 @@ isinma:{ch:3, title:'Çiftler Isınma Turu', art:'festival', sp:'sunucu', choice
  go:'festival'},
 
 duello_bilgi:{ch:3, title:'Final: Bilgi Yarışması', art:'duello', sp:'gulizar', choices:[],
- mini:{qs:[['tahmin','irem'],['tahmin','cengiz'],['ayni'],['kim']],
+ mini:{qs:[['tahmin','irem'],['sirala','cengiz'],['ayni'],['tahmin','cengiz']], th:'yarisma',
   intro:`Muhtar Bey ile Gülizar Hanım ilk turu kusursuz geçiyor: 4 soruda 4 doğru. Şimdi sıra sizde. Gülizar Hanım mikrofonu alıyor:<br><br><i>"Dört soru soracağım. Muhtar Bey'le bizi geçmek için en az üçünü bilmeniz lazım. Hile yok, birbirinize bakmak yok!"</i>`,
   reward:(m, n) => m >= 3
    ? {fx:{inv:['+altin','+profesor'], flag:{sampiyon:1}, npc:{gulizar:2}, uyum:m === n ? 1 : 0},
@@ -592,8 +592,8 @@ duello_bilgi:{ch:3, title:'Final: Bilgi Yarışması', art:'duello', sp:'gulizar
  go:'tren'},
 
 cift_testi:{ch:5, title:'Gerçek Çift Testi', art:'mahkeme', sp:'nurten', choices:[],
- mini:{qs:[['ayni'],['tahmin','irem'],['refleks'],['tahmin','cengiz']],
-  intro:`Ötenokta meydanı. Başkan Tahsin sizi gösterip "Ortanoktalı casuslar!" diye bağırıyor ve meydanda bir mahkeme kuruluyor. Yargıç eczacı Nurten Hanım gözlüğünü indiriyor:<br><br><i>"Önce şunu görelim: gerçekten çift misiniz, yoksa sahte mi? Gerçek çiftler aynı cevapları verir ve aynı anda tepki verir. Ayrı ayrı cevaplayın!"</i>`,
+ mini:{qs:[['hafiza'],['tahmin','irem'],['senkron'],['serbest','cengiz']],
+  intro:`Ötenokta meydanı. Başkan Tahsin sizi gösterip "Ortanoktalı casuslar!" diye bağırıyor ve meydanda bir mahkeme kuruluyor. Yargıç eczacı Nurten Hanım gözlüğünü indiriyor:<br><br><i>"Önce şunu görelim: gerçekten çift misiniz, yoksa sahte mi? Gerçek çiftler yaşadıklarını hatırlar, birbirini tanır ve aynı ritimde yaşar. Ayrı ayrı cevaplayın!"</i>`,
   reward:(m, n) => ({fx:{flag:{test:m}, uyum:m === n ? 1 : 0},
    text: m === n ? `Nurten Hanım test kâğıdını havaya kaldırıyor: "Kusursuz! Bunlar gerçek bir çift." Meydanda bir mırıltı dolaşıyor. Dava sizin için çok daha kolay geçecek.`
      : m >= 1 ? `Nurten Hanım kaşlarını kaldırıyor: "Hmm. ${m} doğru. Sahte çift değilsiniz ama… göreceğiz." Dava biraz daha kolay geçecek.`
@@ -615,10 +615,10 @@ fener:{ch:6, title:'Fener Gecesi', art:'fener', sp:'fener',
  ]},
 
 gece_mini:{ch:6, title:'Fenerlerin Altında', art:'fener', sp:'anlatici', choices:[],
- mini:{qs:[['ayni'],['kim'],['ayni']],
+ mini:{qs:[['ayni'],['bumu'],['serbest','irem']], th:'gece',
   intro:`Herkes dağıldıktan sonra ikiniz pansiyonun çatısında baş başa kalıyorsunuz. Gökyüzü fenerlerle dolu. Bir fener alçalıp yanınızdan geçerken üzerinde el yazısıyla sorular olduğunu görüyorsunuz…`,
   reward:(m, n) => m === n
-   ? {fx:{flag:{kalp:1}, uyum:1}, text:`Üç soruya da aynı cevabı verdiniz. Bir süre hiç konuşmadan fenerleri izliyorsunuz. Konuşmaya gerek yok.`}
+   ? {fx:{flag:{kalp:1}, uyum:1}, text:`Üç soruda da birbirinizi tutturdunuz. Bir süre hiç konuşmadan fenerleri izliyorsunuz. Konuşmaya gerek yok.`}
    : m >= 2 ? {fx:{flag:{kalp:1}}, text:`Neredeyse hepsinde aynı cevap. Birbirinize bakıp gülüyorsunuz; tutmayan cevabı sabaha kadar tartışabilirsiniz.`}
    : {fx:null, text:`Cevaplar pek tutmadı ama çatıda kahkahalarınız bütün kasabaya yayılıyor. Nadide Teyze aşağıdan "Uyuyun artık!" diye sesleniyor.`}},
  go:'veda'}
@@ -672,10 +672,10 @@ yayla:{ch:'5b', title:'Karlıyayla', art:'kar', sp:'zehra',
  ]},
 
 yayla_gece:{ch:'5b', title:'Yıldızların Altında', art:'karGece', sp:'zehra', choices:[], onEnter:{flag:{yaylaGece:1}},
- mini:{qs:[['ayni'],['tahmin','irem'],['tahmin','cengiz']],
+ mini:{qs:[['ayni'],['sirala','irem'],['serbest','cengiz']], th:'gece',
   intro:`Gece Zehra Hanım sizi köyün tepesindeki küçük, eski rasathaneye çıkarıyor. Battaniyeler, bir termos salep ve hiç görmediğiniz kadar çok yıldız.<br><br><i>"Burada yıldızlar o kadar yakın ki sorulara cevap verirler,"</i> diyor ve sizi yalnız bırakıyor. Teleskobun yanındaki defterde el yazısıyla sorular var…`,
   reward:(m, n) => m === n
-   ? {fx:{flag:{yildiz:1}, uyum:1}, text:`Üç soruda üç aynı cevap. Tam o anda bir kayan yıldız geçiyor ve ikiniz de aynı anda "Gördün mü?" diyorsunuz. Zehra Hanım ertesi sabah defterde cevaplarınızı görüp uzun süre susuyor.`}
+   ? {fx:{flag:{yildiz:1}, uyum:1}, text:`Üç soruda üç tam isabet. Tam o anda bir kayan yıldız geçiyor ve ikiniz de aynı anda "Gördün mü?" diyorsunuz. Zehra Hanım ertesi sabah defterde cevaplarınızı görüp uzun süre susuyor.`}
    : m >= 2 ? {fx:{flag:{yildiz:1}}, text:`Neredeyse hepsi tuttu. Yıldızlar bu kadarına razı gibi; biri göz kırpar gibi parlıyor.`}
    : {fx:null, text:`Cevaplar pek tutmadı, ama salep sıcak ve gökyüzü çok güzel. Bir süre konuşmadan yıldızları izliyorsunuz.`}},
  go:'kar_sabah'},
@@ -735,8 +735,8 @@ buket:{ch:'6b', title:'Gelin Buketi', art:'dugun', sp:'nadide',
  ]},
 
 dugun_oyun:{ch:'6b', title:'Düğün Oyunu', art:'dugun', sp:'ramazan', choices:[],
- mini:{qs:[['kim'],['ayni'],['kim']],
-  intro:`Düğünün son oyununu Ramazan Abi sunuyor; mikrofon elinde, gözleri dolu:<br><br><i>"Yeni evlilerden önce bir de gençleri sınayalım! Size soracağım, ikiniz de aynı anda cevaplayacaksınız. Bakalım bu kasabaya yeni bir düğün mü geliyor!"</i>`,
+ mini:{qs:[['kim'],['bumu'],['hafiza']], th:'dugun',
+  intro:`Düğünün son oyununu Ramazan Abi sunuyor; mikrofon elinde, gözleri dolu:<br><br><i>"Yeni evlilerden önce bir de gençleri sınayalım! Önce kim daha çok, sonra hızlı bir bu mu şu mu, en sonunda da bu maceradan bir soru! Bakalım bu kasabaya yeni bir düğün mü geliyor!"</i>`,
   reward:(m, n) => m === n
    ? {fx:{flag:{kalp:1}, uyum:1}, text:`Hepsi aynı! Ramazan Abi mikrofonu bırakıp mendilini arıyor. Nadide Teyze ile Rıza Dede birbirine bakıp gülümsüyor: "Bizim gibiler."`}
    : m >= 2 ? {fx:{flag:{kalp:1}}, text:`Neredeyse hepsi tuttu. Kalabalık "Bir daha! Bir daha!" diye bağırıyor ama Ramazan Abi "Bu kadarı yeter, ben dayanamam" diyor.`}

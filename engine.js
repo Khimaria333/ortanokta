@@ -51,36 +51,104 @@ const CIZ_WORDS = ['Keçi','Balon','Turşu','Kedi','Pasta','Otobüs','Kalp','Gü
 function makeMq(N){
   const sc = S[N.scene], r = rngFor(N.seed ^ 0x5bd1e995, N.step);
   N.qUsed = N.qUsed || [];
+  const hist = Array.isArray(N.qHist) ? N.qHist : [];
   const cq = Array.isArray(N.cq) ? N.cq : [];
+  const th = sc.mini.th || null;
   const pick = list => list[Math.floor(r() * list.length)];
-  const qs = sc.mini.qs.map(([kind, sub]) => {
+  // önce bu oyunda ve önceki oyunlarda hiç çıkmamışlar, sahneye uygunsa onlar öne
+  const choose = (list, idOf) => {
+    idOf = idOf || (q => q.id);
+    const fresh = list.filter(q => !N.qUsed.includes(idOf(q)) && !hist.includes(idOf(q)));
+    const unusedNow = list.filter(q => !N.qUsed.includes(idOf(q)));
+    const base = fresh.length ? fresh : unusedNow.length ? unusedNow : list;
+    const themed = th ? base.filter(q => q.th === th) : [];
+    const q = themed.length && r() < 0.65 ? pick(themed) : pick(base);
+    N.qUsed.push(idOf(q));
+    return q;
+  };
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const wordQ = (kind, sub, words, pre) => {
+    const w = choose(words.map(x => ({id:pre + x, w:x}))).w;
+    const o = [w], others = words.filter(x => x !== w);
+    while (o.length < 4){ const x = pick(others); if (!o.includes(x)) o.push(x); }
+    shuffle(o);
+    return {kind, id:pre + w, sub, t:w, o, c:o.indexOf(w)};
+  };
+  const make = (kind, sub) => {
     if (kind === 'refleks') return {kind, id:'refleks', sub:null, t:'Profesör belirince ekrana dokun!'};
-    if (kind === 'ciz'){
-      const words = CIZ_WORDS.filter(w => !N.qUsed.includes('ciz:' + w));
-      const w = pick(words.length ? words : CIZ_WORDS);
-      N.qUsed.push('ciz:' + w);
-      const others = CIZ_WORDS.filter(x => x !== w), o = [w];
-      while (o.length < 4){ const x = pick(others); if (!o.includes(x)) o.push(x); }
-      for (let i = o.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
-      return {kind, id:'ciz:' + w, sub, t:w, o, c:o.indexOf(w)};
+    if (kind === 'senkron'){ const target = 5 + Math.floor(r() * 5); return {kind, id:'senkron', sub:null, t:`${target} saniyeyi hisset!`, target:target * 1000}; }
+    if (kind === 'ciz') return wordQ(kind, sub, CIZ_WORDS, 'ciz:');
+    if (kind === 'emoji') return wordQ(kind, sub, EMOJI_WORDS, 'emo:');
+    if (kind === 'bumu'){
+      const pairs = []; for (let i = 0; i < 6; i++) pairs.push(choose(BUMU).p);
+      return {kind, id:'bumu', sub:null, t:'Bu mu, şu mu?', pairs};
+    }
+    if (kind === 'sirala'){ const q = choose(SIRALA); return {kind, id:q.id, sub, t:q.t, g:q.g, items:q.items.slice()}; }
+    if (kind === 'serbest'){ const q = choose(SERBEST); return {kind, id:q.id, sub, t:q.t, g:q.g}; }
+    if (kind === 'hafiza'){
+      const seen = new Set();
+      const cands = (N.log || []).filter(e => {
+        const s0 = S[e.scene];
+        if (!s0 || s0.mini || s0.individual || s0.event || e.a === null || e.a === undefined || !s0.choices || s0.choices.length < 2) return false;
+        if (seen.has(e.scene) || N.qUsed.includes('haf:' + e.scene)) return false;
+        seen.add(e.scene); return true;
+      });
+      if (cands.length){
+        const e = pick(cands), s0 = S[e.scene]; N.qUsed.push('haf:' + e.scene);
+        const others = shuffle(s0.choices.map((_, i) => i).filter(i => i !== e.a)).slice(0, 3);
+        const idx = shuffle([e.a].concat(others));
+        return {kind, id:'haf:' + e.scene, sub:null, t:`"${s0.title}" sahnesinde ne yapmıştınız?`, o:idx.map(i => s0.choices[i].t), c:idx.indexOf(e.a)};
+      }
+      kind = 'ayni';
     }
     const mine = cq.filter(q => q.kind === kind && (kind !== 'tahmin' || q.by === sub) && !N.qUsed.includes(q.id));
     if (mine.length && r() < 0.5){
       const q = pick(mine); N.qUsed.push(q.id);
       return {kind, id:q.id, sub:sub || null, t:q.t, g:null, o:kind === 'kim' ? null : q.o.slice(0, 4), custom:true, by:q.by};
     }
-    const pool = QB[kind].filter(q => !N.qUsed.includes(q.id));
-    const q = pick(pool.length ? pool : QB[kind]);
-    N.qUsed.push(q.id);
+    const q = choose(QB[kind]);
     return {kind, id:q.id, sub:sub || null, t:q.t, g:q.g || null, o:q.o ? q.o.slice() : null};
-  });
+  };
+  const qs = sc.mini.qs.map(([kind, sub]) => make(kind, sub));
   N.mq = {step:N.step, k:0, qs, res:[]};
 }
 function qOpts(q){ if (q.kind === 'kim') return KIM_OPTS; if (q.o) return q.o; const Q = QBY[q.id]; return Q && Q.o ? Q.o : []; }
-function ansRange(P){ const q = P.mq.qs[P.mq.k]; return q.kind === 'refleks' ? 5001 : qOpts(q).length; }
+function ansRange(P){
+  const q = P.mq.qs[P.mq.k];
+  switch (q.kind){
+    case 'refleks': return 5001;
+    case 'senkron': return 30001;
+    case 'bumu': return 64;
+    case 'sirala': return 24;
+    case 'serbest': return 3;
+    default: return qOpts(q).length;
+  }
+}
 function validAnsFor(P, t){ return !!(t && P.mq && t.step === P.step && t.k === P.mq.k && Number.isInteger(t.a) && t.a >= 0 && t.a < ansRange(P)); }
 // Refleks: ikiniz de hızlıysanız (ortalama < 650 ms, ikisi de < 1000 ms) eşleşme sayılır
 function refleksOk(a, b){ return (a + b) / 2 < 650 && a < 1000 && b < 1000; }
+const bitsSame = (a, b, n) => { let k = 0; for (let i = 0; i < n; i++) if (((a >> i) & 1) === ((b >> i) & 1)) k++; return k; };
+const permHits = (a, b) => { const x = PERMS4[a] || [], y = PERMS4[b] || []; let k = 0; for (let i = 0; i < 4; i++) if (x[i] === y[i]) k++; return k; };
+const SENKRON_TOL = 600;
+// bir sorunun puanı: {m: eşleşme, s: ayrıntı}
+function mqScore(q, ai, ac){
+  switch (q.kind){
+    case 'refleks': return {m:refleksOk(ai, ac)};
+    case 'senkron': { const d = Math.abs(ai - ac); return {m:d <= SENKRON_TOL, s:d}; }
+    case 'bumu': { const k = bitsSame(ai, ac, q.pairs.length); return {m:k >= 4, s:k}; }
+    case 'sirala': { const k = permHits(ai, ac); return {m:k >= 2, s:k}; }
+    case 'serbest': { const j = q.sub === 'irem' ? ai : ac; return {m:j >= 1, s:j}; }
+    case 'hafiza': return {m:ai === q.c && ac === q.c, s:(ai === q.c ? 1 : 0) + (ac === q.c ? 1 : 0)};
+    default: return {m:ai === ac};
+  }
+}
+// bir sorunun ilerleyebilmesi için iki cevabın da hazır olması (serbestte hakem kararı da gerekir)
+function mqReady(P, A, B){
+  const q = P.mq.qs[P.mq.k];
+  if (!validAnsFor(P, A) || !validAnsFor(P, B)) return false;
+  if (q.kind === 'serbest'){ const J = q.sub === 'irem' ? A : B; return J.jd === true; }
+  return true;
+}
 function chOf(id, P){ const s = S[id]; if (!s) return null; if (s.ch !== null && s.ch !== undefined) return s.ch; return (P && P.evtRet && S[P.evtRet]) ? S[P.evtRet].ch : 1; }
 
 // Bir sahneden diğerine geçiş: son kontrolü, giriş etkileri, mini oyun hazırlığı
@@ -116,8 +184,16 @@ function tryEvent(N, go){
 function mqAdvance(P, ai, ac, extra){
   const N = clone(P);
   const q = N.mq.qs[N.mq.k];
-  const rec = {i:ai, c:ac, m:q.kind === 'refleks' ? refleksOk(ai, ac) : ai === ac};
+  const sc0 = mqScore(q, ai, ac), rec = {i:ai, c:ac, m:sc0.m};
+  if (sc0.s !== undefined) rec.s = sc0.s;
   if (extra && typeof extra.d === 'string') rec.d = extra.d;
+  if (extra && typeof extra.e === 'string') rec.e = extra.e.slice(0, 40);
+  if (extra && typeof extra.xi === 'string') rec.xi = extra.xi.slice(0, 80);
+  if (extra && typeof extra.xc === 'string') rec.xc = extra.xc.slice(0, 80);
+  // oyun sonu "en şaşırtan cevap" için tutmayanları sakla
+  if (!rec.m && ['tahmin','kim','ayni','sirala','serbest','hafiza'].includes(q.kind)){
+    N.mqMiss = (N.mqMiss || []).concat([{q:{kind:q.kind, sub:q.sub, t:q.t, g:q.g || null, o:q.o || null, id:q.id, items:q.items || null}, r:rec}]).slice(-12);
+  }
   N.mq.res.push(rec);
   N.mq.k++;
   if (N.mq.k < N.mq.qs.length) return N;
@@ -150,7 +226,8 @@ function newGame(prev, cq){
     stats:{irem:{ce:1, ck:1, ze:1, sa:1}, cengiz:{ce:1, ck:1, ze:1, sa:1}},
     inv:[], npc:{}, flags:{}, uyum:0, kaos:0, wins:{irem:0, cengiz:0},
     missions:{irem:a, cengiz:b}, last:null, log:[], ending:null, dis:null, ikna:0,
-    mq:null, mqMatch:0, mqTotal:0, visits:0, qUsed:[], evtUsed:[], evtCount:0, evtRet:null,
+    mq:null, mqMatch:0, mqTotal:0, visits:0, qUsed:[], evtUsed:[], evtCount:0, evtRet:null, mqMiss:[],
+    qHist:(prev && (Array.isArray(prev.qHist) || Array.isArray(prev.qUsed))) ? Array.from(new Set((prev.qHist || []).concat(prev.qUsed || []))).slice(-500) : [],
     cq:Array.isArray(cq) ? cq.filter(q => q && q.id && q.t && ['tahmin','kim','ayni'].includes(q.kind)).slice(0, 60) : [],
     found:(prev && Array.isArray(prev.found)) ? prev.found.filter(k => ENDINGS[k]) : [],
     jok:{irem:[], cengiz:[]}, jokUsed:{irem:[], cengiz:[]}, jokEarned:{irem:0, cengiz:0}

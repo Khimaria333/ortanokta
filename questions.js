@@ -29,7 +29,33 @@ tahmin:[
   {id:'t21', t:'Bir konserde nerede durursun?', g:'bir konserde nerede durur?', o:['En önde, bağırarak','Ortada, dans ederek','Arkada, izleyerek','Hiç gitmem']},
   {id:'t22', t:'Tatlı mı, tuzlu mu?', g:'tatlıcı mı, tuzlucu mu?', o:['Tatlı','Tuzlu','İkisi birden','Turşu 🥒']},
   {id:'t23', t:'Bir günlüğüne başka bir meslekte olsan?', g:'bir günlüğüne hangi meslekte olmak isterdi?', o:['Pilot','Aşçı','Dedektif','Hayvan bakıcısı']},
-  {id:'t24', t:'Telefonun şarjı %1 olsa son mesajını kime atarsın?', g:'telefonunun şarjı %1 olsa son mesajı kime atar?', o:['Sevgilime','Aileme','Arkadaş grubuna','Kimseye, sessizce kapanır']}
+  {id:'t24', t:'Telefonun şarjı %1 olsa son mesajını kime atarsın?', g:'telefonunun şarjı %1 olsa son mesajı kime atar?', o:['Sevgilime','Aileme','Arkadaş grubuna','Kimseye, sessizce kapanır']},
+  {id:'t25', t:'Uzun bir yolculukta ne yaparsın?', g:'uzun bir yolculukta ne yapar?', o:['Cama bakıp düşünürüm','Müzik dinlerim','Uyurum','Yanımdakiyle sohbet ederim'], th:'yol'},
+  {id:'t26', t:'Yolculukta atıştırmalık olarak ne alırsın?', g:'yolculukta atıştırmalık olarak ne alır?', o:['Çekirdek','Cips','Çikolata','Simit'], th:'yol'},
+  {id:'t27', t:'Otobüste hangi koltuğu seçersin?', g:'otobüste hangi koltuğu seçer?', o:['Cam kenarı','Koridor','En arka','Şoförün hemen arkası'], th:'yol'},
+  {id:'t28', t:'Bavul hazırlarken sen…', g:'bavul hazırlarken nasıldır?', o:['Bir hafta önceden hazırlarım','Son gece toplarım','Yarısını unuturum','Her şeyi yanıma alırım'], th:'yol'},
+  {id:'t29', t:'Gece gökyüzüne bakınca aklına ne gelir?', g:'gece gökyüzüne bakınca aklına ne gelir?', o:['Uzaklardaki sevdiklerim','Uzaylılar','Yarın yapacaklarım','Hiçbir şey, sadece izlerim'], th:'gece'},
+  {id:'t30', t:'Kayan yıldız görsen ne dilersin?', g:'kayan yıldız görse ne diler?', o:['Daha çok birlikte zaman','Sağlık ve huzur','Bol para','Bir köpek ya da kedi'], th:'gece'},
+  {id:'t31', t:'Uykun kaçınca ne yaparsın?', g:'uykusu kaçınca ne yapar?', o:['Telefonda kaybolurum','Kitap okurum','Mutfağa giderim','Tavanı izlerim'], th:'gece'},
+  {id:'t32', t:'Bir düğünde sen nerede olursun?', g:'bir düğünde nerede olur?', o:['Halayın başında','Pasta masasında','Fotoğraf çekerken','Köşede gelini izlerken'], th:'dugun'},
+  {id:'t33', t:'Düğünde gelin buketini atınca sen…', g:'düğünde gelin buketi atılınca ne yapar?', o:['Atlayıp yakalarım','Kaçarım','Fotoğrafını çekerim','Başkasına pas veririm'], th:'dugun'},
+  {id:'t34', t:'Bir yarışmada kaybedince ne yaparsın?', g:'bir yarışmada kaybedince ne yapar?', o:['Rövanş isterim','Gülüp geçerim','Biraz küserim','Kazananı tebrik ederim'], th:'yarisma'},
+  {id:'t35', t:'Bir bilgi yarışmasında en iyi olduğun konu?', g:'bir bilgi yarışmasında en iyi olduğu konu hangisi?', o:['Film ve dizi','Yemek','Tarih ve coğrafya','Magazin'], th:'yarisma'},
+  {id:'t36', t:'Bir hafta telefonsuz kalsan en çok neyi özlersin?', g:'bir hafta telefonsuz kalsa en çok neyi özler?', o:['Sevgilimle konuşmayı','Sosyal medyayı','Müziğimi','Haritayı']},
+  {id:'t37', t:'Bir restoranda menüye bakınca…', g:'bir restoranda menüye bakınca ne yapar?', o:['Hep aynı şeyi söylerim','Yeni bir şey denerim','Garsona sorarım','Karşımdakinin tabağından yerim']},
+  {id:'t38', t:'Çocukken ne olmak isterdin?', g:'çocukken ne olmak isterdi?', o:['Doktor','Astronot','Öğretmen','Şarkıcı ya da oyuncu']},
+  {id:'t39', t:'Yağmurlu bir pazar gününü nasıl geçirirsin?', g:'yağmurlu bir pazar gününü nasıl geçirir?', o:['Battaniye ve dizi','Yağmurda yürüyüş','Mutfakta bir şeyler pişirip','Uyuyarak']},
+  {id:'t40', t:'Seni en çok ne strese sokar?', g:'onu en çok ne strese sokar?', o:['Geç kalmak','Kalabalık','Belirsizlik','Bitmeyen işler']},
+  {id:'t41', t:'Biri sana sürpriz yapınca…', g:'biri ona sürpriz yapınca nasıl tepki verir?', o:['Ağlarım','Kahkaha atarım','Donup kalırım','Önceden anlamıştım derim']},
+  {id:'t42', t:'Hangi dönemde yaşamak isterdin?', g:'hangi dönemde yaşamak isterdi?', o:['Gelecekte','Osmanlı döneminde','80\'lerde','Tam şimdi']},
+  {id:'t43', t:'En sevdiğin çay ya da kahve nasıl?', g:'çayını ya da kahvesini nasıl sever?', o:['Tavşan kanı çay','Şekersiz Türk kahvesi','Bol sütlü kahve','Hiç içmem']},
+  {id:'t44', t:'Bir kavgadan sonra ilk adımı…', g:'bir kavgadan sonra ilk adımı genelde…', o:['Hep ben atarım','Karşı taraf atar','Kimse atmaz, unuturuz','Komik bir mesajla atarım']},
+  {id:'t45', t:'Bir uzaylıya Dünya\'yı anlatacak tek şeyi seçsen?', g:'bir uzaylıya Dünya\'yı anlatmak için ne gösterir?', o:['Bir gün batımı','Bir tabak mantı','Bir kedi videosu','Bir aile sofrası']},
+  {id:'t46', t:'Doğum gününü nasıl kutlamak istersin?', g:'doğum gününü nasıl kutlamak ister?', o:['Kocaman bir partiyle','Sadece sevdiklerimle','Bir yolculukla','Hiç kutlamadan']},
+  {id:'t47', t:'Bir ıssız adaya yanına alacağın tek şey?', g:'ıssız bir adaya yanına alacağı tek şey ne olur?', o:['Telefon ve şarj','Bir bıçak','Bir kitap','Sevgilim']},
+  {id:'t48', t:'Bir dizide en çok hangi karaktere benzersin?', g:'bir dizide en çok hangi karaktere benzer?', o:['Komik arkadaş','Gizemli yeni gelen','Herkesin annesi','Sürekli başı belada olan']},
+  {id:'t49', t:'Sana en çok yakışan iltifat?', g:'en çok hangi iltifatı sever?', o:['Çok komiksin','Çok güzelsin/yakışıklısın','Çok akıllısın','İyi ki varsın']},
+  {id:'t50', t:'Kendini bir yiyecek olarak düşünsen?', g:'kendini bir yiyecek olarak düşünse ne olurdu?', o:['Sıcak bir çorba','Acılı bir kebap','Bir dilim pasta','Bir kavanoz turşu 🥒']}
 ],
 kim:[
   {id:'k1', t:'Kim daha çok geç kalır?'},
@@ -51,7 +77,27 @@ kim:[
   {id:'k17', t:'Kim daha iyi dans eder?'},
   {id:'k18', t:'"5 dakikaya hazırım" deyip 30 dakika hazırlanan kim?'},
   {id:'k19', t:'Gece kim daha geç yatar?'},
-  {id:'k20', t:'Mesajlara kim daha hızlı cevap verir?'}
+  {id:'k20', t:'Mesajlara kim daha hızlı cevap verir?'},
+  {id:'k21', t:'Yolculukta kim önce uyuyakalır?', th:'yol'},
+  {id:'k22', t:'Kim bavula daha fazla gereksiz eşya koyar?', th:'yol'},
+  {id:'k23', t:'Tren kaçarken peronda kim daha hızlı koşar?', th:'yol'},
+  {id:'k24', t:'Gece yıldızlara bakarken kim daha çok konuşur?', th:'gece'},
+  {id:'k25', t:'Karanlıktan kim daha çok korkar?', th:'gece'},
+  {id:'k26', t:'Bir düğünde kim daha önce dans pistine çıkar?', th:'dugun'},
+  {id:'k27', t:'Düğünde kim daha çok ağlar?', th:'dugun'},
+  {id:'k28', t:'Kim daha çok "Bir dakika, bir şey söyleyeceğim" deyip unutur?'},
+  {id:'k29', t:'Kim daha iyi hediye seçer?'},
+  {id:'k30', t:'Kim daha çok "Ne yiyelim?" diye sorup hiçbir öneriyi beğenmez?'},
+  {id:'k31', t:'Kim daha iyi şarkı söyler?'},
+  {id:'k32', t:'Kim bir kediyi görünce sesini incelterek konuşur?'},
+  {id:'k33', t:'Kim daha çok "Ben demiştim" der?'},
+  {id:'k34', t:'Kim bir sırrı daha uzun saklar?'},
+  {id:'k35', t:'Kim daha çok sesli mesaj atar?'},
+  {id:'k36', t:'Kim bir yarışmayı kaybedince daha çok söylenir?', th:'yarisma'},
+  {id:'k37', t:'Kim daha iyi araba kullanır?'},
+  {id:'k38', t:'Kim daha çok "Az kaldı, geldim" deyip evden yeni çıkar?'},
+  {id:'k39', t:'Kim daha çok aynı diziyi tekrar izler?'},
+  {id:'k40', t:'Kim ilk önce "Seni seviyorum" demişti?'}
 ],
 ayni:[
   {id:'a1', t:'İlk tatilimiz nerede olsun?', o:['Deniz kenarı','Dağ evi','Yurt dışında bir şehir','Kamp']},
@@ -69,8 +115,98 @@ ayni:[
   {id:'a13', t:'Bir küslükten sonra barışmanın en iyi yolu?', o:['Hemen konuşmak','Biraz beklemek','Yemek ısmarlamak','Komik bir mesaj']},
   {id:'a14', t:'Bir gün düğünümüz olsa nasıl olurdu?', o:['Kocaman ve gürültülü','Küçük ve samimi','Sahilde','Kaçıp evlenirdik']},
   {id:'a15', t:'Süper kahraman ikilisi olsak ortak gücümüz?', o:['Işınlanmak','Zihin okumak','Zamanı durdurmak','Keçilerle konuşmak 🐐']},
-  {id:'a16', t:'Bu maceradaki en sevdiğin karakter?', o:['Ramazan Abi','Profesör 🐐','Gülizar Hanım','Paşa 🐈']}
+  {id:'a16', t:'Bu maceradaki en sevdiğin karakter?', o:['Ramazan Abi','Profesör 🐐','Gülizar Hanım','Paşa 🐈']},
+  {id:'a17', t:'Birlikte bir yolculuğa çıksak nasıl gideriz?', o:['Trenle','Arabayla, yol boyu durarak','Uçakla, hızlıca','Balonla 🎈'], th:'yol'},
+  {id:'a18', t:'Yol şarkımız ne olsun?', o:['Bağıra bağıra pop','Sakin bir akustik','Eski bir Türk şarkısı','Ramazan Abi\'nin türküsü'], th:'yol'},
+  {id:'a19', t:'Bir gece birlikte nerede uyanmak isterdik?', o:['Karlı bir dağ evinde','Deniz kenarında bir çadırda','Bir şehrin en yüksek katında','Bir trenin kuşetinde'], th:'gece'},
+  {id:'a20', t:'Bir yıldıza ad koysak ne olurdu?', o:['İkimizin adı','Profesör','Ortanokta','Bir iç şaka'], th:'gece'},
+  {id:'a21', t:'Düğünümüzde ilk dans şarkısı?', o:['Yavaş ve romantik','Hareketli bir pop','Bir halay','Tamamen absürt bir şey'], th:'dugun'},
+  {id:'a22', t:'Düğün pastamız nasıl olurdu?', o:['Klasik beyaz','Çikolatalı','Turşulu 🥒','Pasta yerine baklava'], th:'dugun'},
+  {id:'a23', t:'Bir yarışma programına çıksak hangisi olurdu?', o:['Bilgi yarışması','Yemek yarışması','Dans yarışması','Hayatta kalma'], th:'yarisma'},
+  {id:'a24', t:'İlk buluşmamızı tek kelimeyle anlat.', o:['Heyecanlı','Komik','Utangaç','Unutulmaz']},
+  {id:'a25', t:'Birlikte en çok ne yapmayı seviyoruz?', o:['Konuşmak','Gülmek','Yemek yemek','Hiçbir şey yapmamak']},
+  {id:'a26', t:'Bir kavgada genelde kim haklı çıkar?', o:['İrem','Cengiz','İkimiz de','Kimse, unuturuz']},
+  {id:'a27', t:'Ortak bir hobi edinsek?', o:['Yemek yapmak','Dans','Bir enstrüman','Bitki yetiştirmek']},
+  {id:'a28', t:'Gelecekteki evimizin şehri?', o:['İrem\'in şehri','Cengiz\'in şehri','Bambaşka bir şehir','Ortanokta gibi bir kasaba']},
+  {id:'a29', t:'Bir film gecesinde ne izleriz?', o:['Romantik komedi','Korku','Animasyon','Bitmeyen bir dizi']},
+  {id:'a30', t:'Bizim en büyük süper gücümüz?', o:['Birbirimizi güldürmek','Sabır','Uzaktan bile yakın olmak','İnat']},
+  {id:'a31', t:'Birlikte yaşasak ilk tartışma konumuz?', o:['Bulaşık','Klima/kalorifer derecesi','Kumanda','Uyku saati']},
+  {id:'a32', t:'Bir günlüğüne başka bir ülkede olsak?', o:['İtalya\'da makarna','Japonya\'da kiraz çiçekleri','Norveç\'te kuzey ışıkları','Mısır\'da piramitler']},
+  {id:'a33', t:'Bize en çok benzeyen hayvan ikilisi?', o:['İki kedi','Kedi ve köpek','İki penguen','Keçi ve kedi']},
+  {id:'a34', t:'İlişkimizin şu anki mevsimi?', o:['İlkbahar','Yaz','Sonbahar','Kış (ama sobalı)']},
+  {id:'a35', t:'On yıl sonra bir pazar sabahı?', o:['Kalabalık bir kahvaltı','Bir yolculukta','Bahçede kahve','Hâlâ yatakta']},
+  {id:'a36', t:'Birbirimize yazacağımız ilk mektubun ilk kelimesi?', o:['Canım','Merhaba','Biliyor musun','Seni']}
 ]};
+
+// ---------------------------------------------------------------------
+//  YENİ MİNİ OYUN HAVUZLARI
+// ---------------------------------------------------------------------
+// Bu mu, şu mu? (her turda 6 çift)
+const BUMU = [
+  ['Çay','Kahve'],['Deniz','Dağ'],['Kedi','Köpek'],['Sabah','Gece'],['Tatlı','Tuzlu'],['Film','Dizi'],['Yaz','Kış'],['Şehir','Kasaba'],
+  ['Pizza','Mantı'],['Kitap','Podcast'],['Ev partisi','Sessiz akşam'],['Erken kalkmak','Geç yatmak'],['Mesaj','Sesli arama'],['Plan','Sürpriz'],
+  ['Kumsal','Havuz'],['Çikolata','Dondurma'],['Spor','Kanepe'],['Korku filmi','Komedi'],['Uçak','Tren'],['Simit','Poğaça'],['Fotoğraf çekmek','Fotoğrafta olmak'],
+  ['Çorap giyip uyumak','Çıplak ayak'],['Kalabalık konser','Küçük bar'],['Ketçap','Mayonez'],['Sıcak çikolata','Limonata'],['Bisiklet','Paten'],['Kamp','Otel'],
+  ['Balkon','Bahçe'],['Doğum günü partisi','Doğum günü yolculuğu'],['Süper zekâ','Süper güç'],['Geçmişe gitmek','Geleceğe gitmek'],['Uçmak','Görünmez olmak'],
+  ['Turşu 🥒','Reçel'],['Keçi 🐐','Kedi 🐈'],['Balon 🎈','Tren 🚂'],['Pazar kahvaltısı','Pazar brunch\'ı'],['Dans etmek','Şarkı söylemek'],
+  ['Sinemada film','Evde film'],['Sıcak duş','Soğuk duş'],['Yağmur','Kar'],['Sürpriz parti','Sakin bir akşam yemeği'],['Telefon','Bilgisayar'],
+  ['Çiçek','Çikolata'],['El yazısı mektup','Uzun bir sesli mesaj'],['Lunapark','Müze'],['Ön koltuk','Arka koltuk'],['Kahvaltı','Akşam yemeği'],['Uzun saç','Kısa saç']
+].map((p, i) => ({id:'bm' + (i + 1), p}));
+
+// Sıralama: biri kendi tercihini sıralar, öbürü onun sıralamasını tahmin eder
+const SIRALA = [
+  {id:'s1', t:'Bunları en sevdiğinden en aza sırala.', g:'bunları en sevdiğinden en aza nasıl sıralar?', items:['Pizza','Mantı','Sushi','Kebap']},
+  {id:'s2', t:'Tatil türlerini en çok istediğinden en aza sırala.', g:'tatil türlerini nasıl sıralar?', items:['Deniz','Kayak','Şehir turu','Kamp']},
+  {id:'s3', t:'Hayvanları en sevdiğinden en aza sırala.', g:'hayvanları nasıl sıralar?', items:['Kedi','Köpek','Keçi 🐐','Panda']},
+  {id:'s4', t:'Mevsimleri en sevdiğinden en aza sırala.', g:'mevsimleri nasıl sıralar?', items:['İlkbahar','Yaz','Sonbahar','Kış']},
+  {id:'s5', t:'Bir hafta sonu en çok istediğinden en aza sırala.', g:'hafta sonu planlarını nasıl sıralar?', items:['Uyumak','Gezmek','Arkadaşlarla buluşmak','Evde dizi']},
+  {id:'s6', t:'Tatlıları en sevdiğinden en aza sırala.', g:'tatlıları nasıl sıralar?', items:['Baklava','Sütlaç','Çikolatalı pasta','Dondurma']},
+  {id:'s7', t:'Bu maceradaki karakterleri en sevdiğinden en aza sırala.', g:'macera karakterlerini nasıl sıralar?', items:['Ramazan Abi','Profesör 🐐','Gülizar Hanım','Paşa 🐈']},
+  {id:'s8', t:'Ulaşım araçlarını en sevdiğinden en aza sırala.', g:'ulaşım araçlarını nasıl sıralar?', items:['Tren','Uçak','Araba','Otobüs'], th:'yol'},
+  {id:'s9', t:'Bir yolculukta yanına ilk alacağın şeyleri sırala.', g:'yolculukta yanına alacağı şeyleri nasıl sıralar?', items:['Şarj aleti','Atıştırmalık','Kulaklık','Yastık'], th:'yol'},
+  {id:'s10', t:'Akşam aktivitelerini en sevdiğinden en aza sırala.', g:'akşam aktivitelerini nasıl sıralar?', items:['Yıldız izlemek','Film','Uzun sohbet','Oyun oynamak'], th:'gece'},
+  {id:'s11', t:'Bir düğünde en sevdiğin anları sırala.', g:'düğün anlarını nasıl sıralar?', items:['Halay','Pasta','Gelin girişi','Yemek'], th:'dugun'},
+  {id:'s12', t:'Bu hediyeleri en çok sevindireceğinden en aza sırala.', g:'bu hediyeleri nasıl sıralar?', items:['Bir mektup','Bir yolculuk','Bir takı','Bir bitki']},
+  {id:'s13', t:'Bu süper güçleri en çok istediğinden en aza sırala.', g:'süper güçleri nasıl sıralar?', items:['Işınlanmak','Uçmak','Zihin okumak','Zamanı durdurmak']},
+  {id:'s14', t:'İçecekleri en sevdiğinden en aza sırala.', g:'içecekleri nasıl sıralar?', items:['Çay','Kahve','Ayran','Limonata']},
+  {id:'s15', t:'Yarışma türlerini en iyi olduğundan en kötüye sırala.', g:'hangi yarışmada daha iyi olduğunu nasıl sıralar?', items:['Bilgi','Yemek','Dans','Bilek güreşi'], th:'yarisma'}
+];
+// 4 elemanın 24 dizilişi (cevap = bu listedeki sıra)
+const PERMS4 = (() => { const out = [], go = (a, rest) => { if (!rest.length){ out.push(a); return; } rest.forEach((x, i) => go(a.concat(x), rest.filter((_, j) => j !== i))); }; go([], [0, 1, 2, 3]); return out; })();
+
+// Serbest cevap: biri kendisi için yazar, öbürü tahminini yazar, ilk yazan hakemlik yapar
+const SERBEST = [
+  {id:'f1', t:'Çocukken en sevdiğin yemek neydi?', g:'çocukken en sevdiği yemek neydi?'},
+  {id:'f2', t:'En son hangi şarkıyı dinledin?', g:'en son hangi şarkıyı dinledi?'},
+  {id:'f3', t:'Hayalindeki tatil yeri neresi?', g:'hayalindeki tatil yeri neresi?'},
+  {id:'f4', t:'Seni en çok güldüren film hangisi?', g:'onu en çok güldüren film hangisi?'},
+  {id:'f5', t:'Çocukluk kahramanın kimdi?', g:'çocukluk kahramanı kimdi?'},
+  {id:'f6', t:'En sevdiğin renk ne?', g:'en sevdiği renk ne?'},
+  {id:'f7', t:'Bir süper kahraman adın olsa ne olurdu?', g:'bir süper kahraman adı olsa ne olurdu?'},
+  {id:'f8', t:'Şu an canın en çok ne yemek istiyor?', g:'şu an canı en çok ne yemek istiyor?'},
+  {id:'f9', t:'Bizim ilişkimizi tek kelimeyle anlatsan?', g:'ilişkinizi tek kelimeyle nasıl anlatır?'},
+  {id:'f10', t:'Telefonunda en çok kullandığın uygulama?', g:'telefonunda en çok hangi uygulamayı kullanır?'},
+  {id:'f11', t:'En sevdiğin dizi karakteri kim?', g:'en sevdiği dizi karakteri kim?'},
+  {id:'f12', t:'Bir günlüğüne kim olmak isterdin?', g:'bir günlüğüne kim olmak isterdi?'},
+  {id:'f13', t:'En korktuğun şey ne?', g:'en çok neden korkar?'},
+  {id:'f14', t:'Seni hemen mutlu eden küçük bir şey?', g:'onu hemen mutlu eden küçük bir şey ne?'},
+  {id:'f15', t:'Partnerinde en sevdiğin huy?', g:'senin en sevdiği huyun ne?'},
+  {id:'f16', t:'Bir sonraki buluşmada ilk ne yemek istersin?', g:'bir sonraki buluşmada ilk ne yemek ister?'},
+  {id:'f17', t:'Uzun bir yolculukta mutlaka dinlediğin şarkı?', g:'uzun yolculukta mutlaka dinlediği şarkı ne?', th:'yol'},
+  {id:'f18', t:'Kayan yıldıza ne dilerdin? (tek kelime)', g:'kayan yıldıza ne dilerdi? (tek kelime)', th:'gece'},
+  {id:'f19', t:'Gece gökyüzünde en sevdiğin şey?', g:'gece gökyüzünde en sevdiği şey ne?', th:'gece'},
+  {id:'f20', t:'Kendi düğününde çalmasını istediğin şarkı?', g:'kendi düğününde çalmasını istediği şarkı ne?', th:'dugun'},
+  {id:'f21', t:'En sevdiğin pasta?', g:'en sevdiği pasta hangisi?', th:'dugun'},
+  {id:'f22', t:'Hangi konuda kimse seni yenemez?', g:'hangi konuda kimse onu yenemez?', th:'yarisma'},
+  {id:'f23', t:'En sevdiğin çizgi film?', g:'en sevdiği çizgi film hangisi?'},
+  {id:'f24', t:'Bu oyunda en çok güldüğün an?', g:'bu oyunda en çok güldüğü an hangisi?'}
+];
+
+// Emojiyle anlat: gizli kavramı 3 emojiyle anlat
+const EMOJI_WORDS = ['Deniz tatili','Kar tatili','Doğum günü','Düğün','Kamp','Pizza gecesi','Film gecesi','Uzak mesafe','İlk buluşma','Yağmurlu gün','Konser','Bayram','Sinema','Uçak yolculuğu',
+  'Tren yolculuğu','Piknik','Kahvaltı','Spor salonu','Lunapark','Hayvanat bahçesi','Yılbaşı','Sınav haftası','Taşınma günü','Kayıp anahtar','Kedi sahiplenmek','Barbekü','Gece yürüyüşü','Kayan yıldız','Turşu festivali','Keçi kaçtı'];
+const EMOJI_PAL = ['❤️','😂','😍','😴','😱','🥳','🤢','😭','🙈','🤔','🐐','🐈','🐶','🐟','🌞','🌙','⭐','❄️','🌧️','🌊','⛰️','🌲','🔥','🏠','🏨','✈️','🚂','🚌','🚕','🎈',
+  '🎂','🍕','🥟','🍫','🍦','☕','🥒','🍖','🎬','🎵','🎤','🎡','🎁','💍','💐','📚','📱','🔑','⏰','🏃','💃','🎉','🏖️','⛺','🦁'];
 const QBY = {}; Object.values(QB).forEach(list => list.forEach(q => { QBY[q.id] = q; }));
 const KIM_OPTS = ['🌸 İrem','🌊 Cengiz'];
 function qOptions(q, kind){ return kind === 'kim' ? KIM_OPTS : q.o; }

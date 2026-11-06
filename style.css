@@ -481,3 +481,55 @@ button{font:inherit;color:inherit}
 .devchips{display:flex;flex-wrap:wrap;gap:6px}
 .devchips button{border:1.5px solid #e3d9f3;background:#fff;border-radius:999px;padding:6px 10px;font-size:13px;font-family:inherit;color:#2e2140;cursor:pointer}
 .devchips button.on{background:#efe6ff;border-color:#9b7be0;font-weight:800}
+
+/* ---------- yeni mini oyunlar ---------- */
+.bmlist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.bmrow{display:flex;align-items:center;gap:8px}
+.bmrow i{font-style:normal;font-size:12px;color:var(--soft);font-weight:800}
+.bmrow button{flex:1;padding:11px 8px;border-radius:14px;border:2px solid #e3d9f3;background:#fff;font-family:inherit;font-weight:800;font-size:14.5px;color:#2e2140;cursor:pointer;transition:transform .12s}
+.bmrow button.on{background:var(--violet,#7c5cff);border-color:var(--violet,#7c5cff);color:#fff;transform:scale(1.03)}
+.bmrow button:disabled{opacity:.85}
+.bmres{display:flex;flex-direction:column;gap:5px;margin:8px 0}
+.bmr{display:flex;align-items:center;gap:6px;font-size:13.5px}
+.bmr span{flex:1;padding:6px 8px;border-radius:10px;background:#f6f1ff;font-weight:700;text-align:center}
+.bmr span.irem{background:#ffe8f0}.bmr span.cengiz{background:#e4f4ff}
+.bmr.ok span{box-shadow:inset 0 0 0 2px #2ea36b}
+.bmr i{font-style:normal}
+.srlist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.srlist button{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;border:2px solid #e3d9f3;background:#fff;font-family:inherit;font-weight:800;font-size:15px;color:#2e2140;text-align:left;cursor:pointer}
+.srlist button.on{border-color:#9b7be0;background:#f3ecff}
+.srn{width:28px;height:28px;border-radius:50%;background:#efe6ff;color:#5b34b3;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.srlist button.on .srn{background:#7c5cff;color:#fff}
+.srres{margin:8px 0;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.srh{display:grid;grid-template-columns:24px 1fr 1fr 16px;gap:6px;font-size:12px;color:var(--soft);font-weight:800}
+.srh span:first-child{grid-column:2}
+.srr{display:grid;grid-template-columns:24px 1fr 1fr 16px;gap:6px;align-items:center;padding:5px 6px;border-radius:10px;background:#faf7ff}
+.srr.ok{background:#e7f8ef}
+.sbin{width:100%;box-sizing:border-box;margin-top:10px;padding:13px 14px;border-radius:14px;border:2px solid #d9cdf0;font-size:16px;font-family:inherit}
+.judge{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.jbtns{display:flex;gap:8px}
+.jbtns button{flex:1;padding:12px 6px;border-radius:14px;border:2px solid #e3d9f3;background:#fff;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.emoslots{display:flex;gap:8px;justify-content:center;align-items:center;margin:10px 0}
+.emoslots span{width:58px;height:58px;border-radius:16px;border:2px dashed #d9cdf0;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff}
+.emoslots button{border:0;background:#efe6ff;border-radius:12px;padding:8px 12px;font-size:18px;cursor:pointer}
+.emopal{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:210px;overflow:auto;padding:4px;border-radius:14px;background:#faf7ff}
+.emopal button{border:0;background:none;font-size:26px;padding:4px 0;cursor:pointer;border-radius:10px}
+.emopal button:active{background:#efe6ff}
+.emoshow{font-size:52px;text-align:center;letter-spacing:.12em;margin:10px 0;animation:pop .4s ease}
+.emoshow.small{font-size:34px;margin:6px 0}
+.pens{display:flex;gap:8px;justify-content:center;margin:8px 0 6px}
+.pens button{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px #d9cdf0;cursor:pointer}
+.pens button.on{box-shadow:0 0 0 3px #2e2140}
+.reflex.senk.wait{background:linear-gradient(135deg,#7c5cff,#c084fc);color:#fff}
+.senkfark{font-size:13px;color:#5a4a6a;text-align:center;margin:6px 0}
+.says{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0 4px}
+.says button{border:1.5px solid #e3d9f3;background:#fff;border-radius:999px;padding:7px 11px;font-family:inherit;font-size:13px;font-weight:700;color:#2e2140;cursor:pointer}
+.says button.sent{background:#efe6ff;border-color:#9b7be0}
+.surp{margin:16px 0 4px;text-align:left}
+.surp h3{margin:0 0 8px;color:#fff}
+.mqchart{background:#fff;border-radius:16px;padding:12px;margin-bottom:12px;border:1.5px solid #efe6ff}
+.mqh{font-weight:800;font-size:13.5px;margin-bottom:8px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:110px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bar span{display:block;width:100%;border-radius:6px 6px 2px 2px;background:linear-gradient(#ff8fb1,#7c5cff)}
+.bar small{font-size:10px;color:var(--soft);margin-top:3px}
