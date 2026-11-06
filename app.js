@@ -1929,11 +1929,11 @@ function memDB(){
 }
 
 // ---------- bot partner ----------
-const BOT_MODES = {agree:['🤝','Anlaşan'], random:['🎲','Rastgele'], oppose:['😤','Karşı çıkan'], off:['⏸️','Kapalı']};
-G.botMode = LS.get('botMode', 'random');
+const BOT_MODES = {hot:['🔁','Sırayla ben oynarım'], agree:['🤝','Anlaşan'], random:['🎲','Rastgele'], oppose:['😤','Karşı çıkan'], off:['⏸️','Kapalı']};
+G.botMode = LS.get('botMode', 'hot'); if (!BOT_MODES[G.botMode]) G.botMode = 'hot';
 let botTimer = null, botKey = '';
 function botPlan(){
-  if (!TEST || G.botMode === 'off' || !G.ready || !G.me) return null;
+  if (!TEST || G.botMode === 'off' || G.botMode === 'hot' || !G.ready || !G.me) return null;
   const P = G.P, b = other(G.me), h = G.me;
   if (!isGame(P) || P.scene === 'end' || G.readOnly) return null;
   const rnd = n => Math.floor(Math.random() * n);
@@ -1989,7 +1989,35 @@ function botDrawing(){
   const smile = []; for (let a = 0; a <= 12; a++){ const t = Math.PI * (0.15 + a / 12 * 0.7); smile.push(hx(cx + Math.cos(t) * 40) + hx(cy + 10 + Math.sin(t) * 30)); }
   return [circle.join(''), hx(100) + hx(100) + hx(102) + hx(104), hx(156) + hx(100) + hx(158) + hx(104), smile.join('')].join('|');
 }
+// 🔁 sırayla oynama: kilitleyince otomatik diğer oyuncuya geç
+function hotNeeds(p){
+  const P = G.P;
+  if (!isGame(P) || P.scene === 'end') return {need:false};
+  if (inDis()) return {need:!validHand(G.T[p]), can:true};
+  if (inMini()){
+    const q = P.mq.qs[P.mq.k];
+    if (q.kind === 'serbest' && p === q.sub && validAns(G.A[p]) && !G.A[p].jd) return {need:validAns(G.A[other(p)]), can:true};
+    if (validAns(G.A[p])) return {need:false};
+    if ((q.kind === 'ciz' || q.kind === 'emoji') && p !== q.sub){ const d = G.A[q.sub]; return {need:true, can:validAns(d) && typeof (q.kind === 'ciz' ? d.d : d.e) === 'string'}; }
+    return {need:true, can:true};
+  }
+  const sc = S[P.scene]; if (!sc) return {need:false};
+  return {need:!validVote(G.V[p], p), can:true};
+}
+let hotTimer = null, hotKey = '';
+function hotTick(){
+  if (!TEST || G.botMode !== 'hot' || !G.ready || !G.me || G.answering || G.voting || G.throwing) return;
+  if (!['scene', 'rps', 'mini'].includes(G.view)) return;
+  const a = hotNeeds(G.me), b = hotNeeds(other(G.me));
+  const go = (!a.need && b.need && b.can) || (a.need && a.can === false && b.need && b.can);
+  if (!go){ hotKey = ''; clearTimeout(hotTimer); return; }
+  const key = G.view + ':' + (G.P && G.P.step) + ':' + (G.P && G.P.mq ? G.P.mq.k : '') + ':' + G.me;
+  if (hotKey === key) return;
+  hotKey = key; clearTimeout(hotTimer);
+  hotTimer = setTimeout(() => { if (hotKey === key){ hotKey = ''; devSwap(true); } }, 700);
+}
 function botTick(){
+  hotTick();
   const plan = botPlan();
   if (!plan){ return; }
   if (plan.key === botKey) return;
@@ -2034,9 +2062,9 @@ function devSheet(){
   const sceneOpts = groups.map(([ch, ids]) => `<optgroup label="${esc(ch === 'olay' ? 'Rastgele olaylar' : (CH[ch] || ('Bölüm ' + ch)))}">${ids.map(id => `<option value="${id}" ${on && P.scene === id ? 'selected' : ''}>${esc(S[id].title)}${S[id].mini ? ' 🎯' : ''}</option>`).join('')}</optgroup>`).join('');
   const st = (lbl, k, v) => `<div class="devrow"><span>${lbl}</span><button data-dv="${k}:-1">−</button><b>${v}</b><button data-dv="${k}:1">+</button></div>`;
   return `
-    <div class="sec">Bot partner (${esc(NAMES[other(G.me)])})</div>
+    <div class="sec">Partner (${esc(NAMES[other(G.me)])})</div>
     <div class="seg devseg">${Object.entries(BOT_MODES).map(([k, [i, n]]) => `<button data-bot="${k}" class="${G.botMode === k ? 'on' : ''}">${i} ${n}</button>`).join('')}</div>
-    <p class="sub devnote">Anlaşan: senin seçtiğini seçer, taş-kağıt-makasta katılır. Karşı çıkan: hep başka şeyi seçer.</p>
+    <p class="sub devnote">Sırayla: kilitleyince ekran kendiliğinden ${esc(NAMES[other(G.me)])}'e geçer, ikisine de sen cevap verirsin. Diğerlerinde bir bot oynar: Anlaşan senin seçtiğini seçer, Karşı çıkan hep başka şeyi seçer.</p>
     <button class="btn ghost" data-dev="swap" style="width:100%">⇄ ${esc(NAMES[other(G.me)])} olarak oyna</button>
     <div class="sec">Oyun</div>
     <div class="devgrid"><button class="btn ghost small" data-dev="new">🆕 Yeni test oyunu</button><button class="btn ghost small" data-dev="reset">🗑️ Her şeyi sıfırla</button></div>
@@ -2091,16 +2119,17 @@ function openDev(){
     toast(`${JOKERS[t].i} ${JOKERS[t].n} verildi.`); Sound.play('win'); re();
   });
 }
-function devSwap(){
-  const p = other(G.me); G.me = p; LS.set('who', p); botKey = ''; G.view = null; G.sel = null;
-  toast(`${AV[p]} Artık ${NAMES[p]} olarak oynuyorsun.`); Sound.play('turn');
+function devSwap(auto){
+  const p = other(G.me); G.me = p; LS.set('who', p); botKey = ''; G.view = null; G.sel = null; G.asel = null; G.hsel = null; G.useSans = false;
+  G.bm = null; G.sr = null; G.em = null;
+  toast(auto ? `🔁 Sıra ${AV[p]} ${NAMES[p]}'de` : `${AV[p]} Artık ${NAMES[p]} olarak oynuyorsun.`); Sound.play('turn');
   updateTestBar(); updateDock(); decide(); botTick();
 }
 function updateTestBar(){
   if (!TEST) return;
   let bar = $('#testbar');
   if (!bar){ bar = document.createElement('div'); bar.id = 'testbar'; $('#game').prepend(bar); }
-  bar.innerHTML = `<span>🧪 DENEME</span><span class="tb-me">${AV[G.me] || ''} ${esc(NAMES[G.me] || '')} · bot ${BOT_MODES[G.botMode][0]}</span><button id="tbSwap">⇄</button><button id="tbPanel">Panel</button>`;
+  bar.innerHTML = `<span>🧪 DENEME</span><span class="tb-me">${AV[G.me] || ''} ${esc(NAMES[G.me] || '')} · ${G.botMode === 'hot' ? '🔁 sırayla' : 'bot ' + BOT_MODES[G.botMode][0]}</span><button id="tbSwap">⇄</button><button id="tbPanel">Panel</button>`;
   $('#tbSwap').onclick = devSwap; $('#tbPanel').onclick = openDev;
 }
 
