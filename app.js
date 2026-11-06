@@ -113,6 +113,18 @@ const ART = {
     props:[['🕯️',12,80,24,'a-pulse'],['🪑',28,92,34],['🎲',30,72,24,'a-bob'],['🫖',66,90,26],['👮🏻',84,92,46]]},
   baris:{sky:'linear-gradient(#8fd6ff 0%, #fff0c9 100%)', g:['#8bcf6a','#6fb352'], hill:true, bunting:true, icon:'🕊️',
     props:[['🤝',50,58,56,'a-pulse'],['🕊️',20,36,30,'a-float'],['🕊️',80,30,26,'a-float'],['🎉',8,92,34],['🎉',92,92,34]]},
+  istasyon:{sky:'linear-gradient(#ffcf9e 0%, #fff1d9 100%)', g:['#9c8f84','#857a70'], flat:true, clouds:2, icon:'🚉',
+    props:[['🚉',14,66,62],['🕰️',40,30,26],['🚂',72,84,78,'a-bob'],['🧳',94,92,26],['🌲',97,70,40]]},
+  istasyonGece:{sky:'linear-gradient(#141a45 0%, #3d2f6e 100%)', g:['#4b4552','#3a3540'], flat:true, stars:34, icon:'🚉',
+    glow:['#ffd56a',74,62,70], props:[['🚉',14,66,62],['🌙',84,22,30,'a-pulse'],['🚂',74,84,78,'a-bob'],['🏮',40,48,22,'a-pulse'],['🐐',94,88,26,'a-bob2']]},
+  tren:{sky:'linear-gradient(#1b2350 0%, #3b2f6b 100%)', g:['#6b4430','#573522'], flat:true, stars:18, icon:'🚃',
+    props:[['🪟',18,42,50],['🪟',82,42,50],['🌙',18,38,20,'a-pulse'],['🕯️',36,86,24,'a-pulse'],['🍽️',26,90,26],['🐐',70,88,30,'a-bob'],['📜',82,90,22]]},
+  kar:{sky:'linear-gradient(#cfe4ff 0%, #f4f9ff 100%)', g:['#ffffff','#e3eef9'], hill:true, clouds:2, icon:'🏔️',
+    props:[['🏔️',16,62,92],['🏔️',86,58,104],['🛖',28,86,44],['⛄',74,90,44,'a-bob'],['🌲',4,80,44],['❄️',46,26,20,'a-float'],['❄️',64,40,16,'a-float']]},
+  karGece:{sky:'linear-gradient(#0a1030 0%, #1c2b5a 100%)', g:['#dfe9f5','#c5d3e6'], hill:true, stars:60, icon:'🌌',
+    glow:['#bcd2ff',50,36,120], props:[['🔭',18,84,46],['🏔️',86,62,84],['☕',32,92,22],['🌠',68,22,30,'a-float'],['👀',94,84,20,'a-pulse']]},
+  dugun:{sky:'linear-gradient(#ffd1dc 0%, #fff4e0 100%)', g:['#8bcf6a','#6fb352'], hill:true, bunting:true, icon:'💐',
+    props:[['💒',50,58,74],['👵🏼',12,90,40,'a-bob'],['👴🏼',88,90,40,'a-bob2'],['💐',26,90,26],['🎻',74,90,26,'a-bob'],['🕊️',20,30,24,'a-float']]},
   mutfak:{cx:24, sky:'repeating-linear-gradient(90deg,#fff3dc 0 30px,#ffe9c7 30px 60px)', g:['#e0b48a','#cc9b6c'], flat:true, bunting:true, icon:'🎂',
     props:[['👩‍🍳',92,74,40],['🎂',58,84,80,'a-bob'],['🍫',84,80,24],['🥒',92,90,28]]},
   pazar:{sky:DAY, g:['#c9b08a','#b39a74'], flat:true, bunting:true, clouds:1, icon:'🧺',
@@ -185,8 +197,8 @@ async function useInstant(t, extra){
   catch(e){ writeErr(e); return false; }
 }
 function updateDock(){ const b = $('#bJok'); if (!b) return; const n = myJokers().length; b.textContent = n; b.classList.toggle('hidden', !n); }
-const IMPORTANT_FLAGS = ['alias','sir','efsaneIz','tatliIpucu','tarihBilgi','otenoktaBilgi','kehanet','balonGordu','durust','muze','necmiYanda','kediOrdusu','gecit','fenerDilek','fotoNot','sampiyon','tursuPasta','velayet','mektup','sanat','tarifIfsa','sir40'];
-const SPECIAL_GO = ['orman','kulube','gece','konusma','panayir','duello','duello_bilgi','gokyuzu_pilot','takip','baris','teselli'];
+const IMPORTANT_FLAGS = ['canavarIz','yaylaDost','yildiz','pamukYanda','buket','kalp','taksi','alias','sir','efsaneIz','tatliIpucu','tarihBilgi','otenoktaBilgi','kehanet','balonGordu','durust','muze','necmiYanda','kediOrdusu','gecit','fenerDilek','fotoNot','sampiyon','tursuPasta','velayet','mektup','sanat','tarifIfsa','sir40'];
+const SPECIAL_GO = ['tren','yayla','orman','kulube','gece','konusma','panayir','duello','duello_bilgi','gokyuzu_pilot','takip','baris','teselli'];
 function prophecy(ch, c){
   const out = [];
   let fx = null; try { fx = val(ch.fx, c) || {}; } catch(e){ fx = {}; }
@@ -1171,7 +1183,7 @@ function viewEnding(){
   if (isNew){ Sound.play('win'); confetti(80); }
   (async () => {
     await beat(isNew ? 900 : 0); if (run !== G.run) return;
-    await typeHTML($('#etext'), E.b);
+    await typeHTML($('#etext'), typeof E.b === 'function' ? E.b(P) : E.b);
     if (run !== G.run) return;
     await beat(600); if (run !== G.run) return;
     $('#epi').classList.remove('hidden'); Sound.play('chip');
@@ -1272,7 +1284,7 @@ const SHEETS = {
       <li><b>Özellikler büyür:</b> bir şeyi seçtikçe o özelliğin artar. Süper gücün baştan +2 verir.</li>
       <li><b>Eşyalar ve dostluklar</b> 🔒 kilitli seçenekleri açar. Kilidin üstünde neyin eksik olduğu yazar.</li>
       <li><b>Gizli görev:</b> 🤫 menüsünden sadece senin gördüğün görevi oku. Sonda açılır.</li>
-      <li><b>17 son var.</b> Bir oyunda sahnelerin yarısını göremezsiniz. Tekrar oynayıp hepsini bulun!</li>
+      <li><b>${ENDING_ORDER.length} son ve iki ayrı rota var.</b> Festivalden sonra yolunuz gökyüzüne ya da raylara çıkabilir; bir oyunda sahnelerin yarısını göremezsiniz. Tekrar oynayıp hepsini bulun!</li>
       <li><b>Canlı:</b> 💬 ile partnerine anlık tepki gönder ya da onu 👉 dürt.</li></ul>`],
   ayarlar:['⚙️ Ayarlar', () => `
       <div class="sec">Ses</div>

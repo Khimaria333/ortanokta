@@ -30,7 +30,9 @@ const NPCS = {
   hayri:{e:'🎈', n:'Kaptan Hayri', d:'Balonu internetten almış. Hiç uçmamış.'},
   necmi:{e:'🏚️', n:'Fikriye & Necmi', d:'20 yıl önce kaybolan efsanevi çift.'},
   tahsin:{e:'🎩', n:'Başkan Tahsin', d:'Ötenokta Belediye Başkanı. Bıyıklı, şüpheci.'},
-  sevket:{e:'🎣', n:'Balıkçı Şevket', d:'Gölün yaşlı kurdu. Az konuşur, çok bilir.'}
+  sevket:{e:'🎣', n:'Balıkçı Şevket', d:'Gölün yaşlı kurdu. Az konuşur, çok bilir.'},
+  vahit:{e:'🚂', n:'Makinist Vahit', d:'40 yıldır Ortanokta Ekspresi\'ni yılda bir gece sürüyor.'},
+  pamuk:{e:'🐕', n:'Pamuk', d:'Karlıyayla\'nın korkunç kar canavarı. Aslında 70 kiloluk bir Kangal.'}
 };
 
 // konuşan karakter portreleri (ilişki puanı olmayanlar da var)
@@ -40,7 +42,8 @@ const SPEAKERS = {
   tahsin:['🎩','Başkan Tahsin'], nurten:['👩🏻‍⚖️','Yargıç Nurten'], sukru:['👮🏻','Gardiyan Şükrü'],
   melahat:['🔮','Falcı Melahat'], baskan:['🎖️','Başkan Rıfkı'], anlatici:['📖','Anlatıcı'], pasa:['🐈','Paşa'],
   sunucu:['🎙️','Sunucu Necati'], sevket:['🎣','Balıkçı Şevket'], dede:['👴🏽','Tavlacı Dedeler'], saadet:['👩🏻‍🏫','Kütüphaneci Saadet'],
-  hasan:['🍬','Lokumcu Hasan'], riza:['👴🏼','Değirmenci Rıza'], fener:['🏮','Fener Gecesi']
+  hasan:['🍬','Lokumcu Hasan'], riza:['👴🏼','Değirmenci Rıza'], fener:['🏮','Fener Gecesi'],
+  vahit:['👨🏽‍🔧','Makinist Vahit'], zehra:['👩🏻‍🌾','Muhtar Zehra'], pamuk:['🐕','Pamuk'], memur:['📜','Nikâh Memuru']
 };
 
 const MISSIONS = {
@@ -62,23 +65,29 @@ const MISSIONS = {
 };
 
 const ENDINGS = {
-  seyyah:{i:'🎈',t:'Balon Seyyahları',h:'Bir pilotla gökyüzünde kalmayı seçin.',b:`Kaptan Hayri'yle rotayı ufka çevirdiniz. Önce Ötenokta'yı, sonra ülkeyi, sonra kıtayı geride bıraktınız. Profesör navigatör, Hayri kaptan, siz de mürettebat. Ramazan Abi'ye her hafta bir kartpostal geliyor: "Sevgiler, Kapadokya'nın üstünden." Uzak mesafe sorununu kökten çözdünüz: artık aynı sepettesiniz.`},
-  hapis:{i:'🔒',t:'Hapishanenin Efsaneleri',h:'Hapisten kaçamazsanız…',b:`Kaçamadınız. Ama Gardiyan Şükrü ile tavla turnuvası kurdunuz, hücreyi çiçeklerle süslediniz ve "Ötenokta'nın en romantik hücresi" seçildiniz. Üç gün sonra iyi hâlden serbest bırakıldınız. Çıkarken Şükrü ağladı. Hâlâ mektuplaşıyorsunuz.`},
+  seyyah:{i:'🎈',t:'Balon Seyyahları',h:'Gökyüzünde kalmayı seçin.',b:P=>P.flags.soloBalon?`Pilotsuz, haritasız, sadece rüzgârla ufka yükseldiniz. Kaptan Hayri telsizden yol tarif etti, sonra dayanamayıp bir otobüse atladı ve Kapadokya'da sepete katıldı. Artık Hayri kaptan, Profesör navigatör, siz de mürettebatsınız. Ramazan Abi'ye her hafta bir kartpostal geliyor: "Sevgiler, bulutların üstünden." Uzak mesafe sorununu kökten çözdünüz: artık aynı sepettesiniz.`:`Kaptan Hayri'yle rotayı ufka çevirdiniz. Önce Ötenokta'yı, sonra ülkeyi, sonra kıtayı geride bıraktınız. Profesör navigatör, Hayri kaptan, siz de mürettebat. Ramazan Abi'ye her hafta bir kartpostal geliyor: "Sevgiler, Kapadokya'nın üstünden." Uzak mesafe sorununu kökten çözdünüz: artık aynı sepettesiniz.`},
+  taksi:{i:'🚕',t:'Tofaş\'ın Yolcuları',h:'Bir kovalamacada durmayı unutun.',b:`Balonu kovalarken Tofaş bir kez bile durmadı, siz de "dur" demediniz. Ötenokta'yı geçtiniz, sonra dağları, sonra denizi gördünüz. Ramazan Abi taksimetreyi hiç açmadı. Şimdi "Ramazan Abi ile Yollarda" kanalınızın iki milyon takipçisi var; en çok izlenen bölüm "Profesör Simit Yiyor".`},
+  ekspres:{i:'🚂',t:'Ekspresin Kondüktörleri',h:'Gecenin treninden hiç inmeyin.',b:`Makinist Vahit 40 yıl sonra emekli oldu ve Ortanokta Ekspresi'ni size devretti. Artık tren yılda bir değil, her hafta çalışıyor: bir ucunda İrem'in şehri, öbür ucunda Cengiz'in şehri, tam ortada Ortanokta. Profesör kondüktör şapkasıyla biletleri kontrol ediyor (ve yiyor). Uzak mesafe artık tek bir sefer uzunluğunda ve o seferde hep birliktesiniz.`},
+  hapis:{i:'🔒',t:'Hapishanenin Efsaneleri',h:'Hapisten kaçamazsanız…',b:`Kaçamadınız (ya da kaçmadınız; kimse emin değil). Gardiyan Şükrü ile tavla turnuvası kurdunuz, hücreyi çiçeklerle süslediniz ve "Ötenokta'nın en romantik hücresi" seçildiniz. Üç gün sonra iyi hâlden serbest bırakıldınız. Çıkarken Şükrü ağladı. Hâlâ mektuplaşıyorsunuz.`},
   elci:{i:'🕊️',t:'Barış Elçileri',h:'Yüz yıllık sırrı barış için kullanın.',b:`1926'dan beri süren turşu kavgasını siz bitirdiniz. İki kasabanın sınırına el ele heykeliniz dikildi (Profesör de heykelde, gözlüğüyle). Her yıl o gün "İrem ile Cengiz Barış Bayramı" olarak kutlanacak. Okullarda adınız ders kitabında.`},
   zengin:{i:'💰',t:'Turşu Milyonerleri',h:'Sırrın bir fiyatı var mı?',b:`Tarifi dev bir firmaya sattınız. Artık zenginsiniz! Ama iki kasaba da size küs. Yatınızın adı "Ortanokta", kaptanı Profesör. Akşamları güvertede oturup "Acaba Ramazan Abi ne yapıyor?" diye iç geçiriyorsunuz. Para her şey değilmiş.`},
-  yerlesik:{i:'🏡',t:'Ortanoktalı Oldunuz',h:'Kasabada çok dost edinip vedada bir sürpriz yapın.',b:`Kapılar kapanmadan otobüslerden atladınız. Taşınıyorsunuz! Nadide Teyze pansiyonu size devretti, 14 kedi de cabası. Bir ay sonra kasaba ikinizi ortak muhtar seçti. Uzak mesafe bitti: artık aynı kasabada, aynı sokakta, aynı 14 kediyle yaşıyorsunuz.`},
+  dag:{i:'🏔️',t:'Karlıyayla\'da Bir Kış',h:'Karla kapanan bir köyde kalmaya karar verin.',b:`Tren gitti, kar yağmaya devam etti, siz de kaldınız. Muhtar Zehra Hanım size köyün en tepesindeki evi verdi: bir soba, iki battaniye, bir pencere dolusu yıldız. Bahara kadar köyün okulunda ders verdiniz; müdür Profesör'dü. Kar eridiğinde ikiniz de aşağı inmek istemediniz.`},
+  yerlesik:{i:'🏡',t:'Ortanoktalı Oldunuz',h:'Kasabada çok dost edinip vedada bir sürpriz yapın.',b:P=>`Kapılar kapanmadan ${P.flags.istasyon?'trenden':'otobüslerden'} atladınız. Taşınıyorsunuz! Nadide Teyze pansiyonu size devretti, 14 kedi de cabası. Bir ay sonra kasaba ikinizi ortak muhtar seçti. Uzak mesafe bitti: artık aynı kasabada, aynı sokakta, aynı 14 kediyle yaşıyorsunuz.`},
   keci:{i:'🐐',t:'Gururlu Keçi Ebeveynleri',h:'Profesör\'ü sonuna kadar yanınızda tutun.',b:`Profesör'ün ortak velayeti noter onaylı (belgeyi yedi, ama yine de geçerli). Altı ay İrem'de, altı ay Cengiz'de kalıyor ve iki şehir arasında kendi otobüs kartıyla seyahat ediyor. Muavinler onu tanıyor. Her kavuşmanızda o da orada: gözlüklü, sakallı ve gururlu.`},
+  yeti:{i:'🐕',t:'Kar Canavarının Ailesi',h:'Korkulan bir canavarı evinize götürün.',b:`Karlıyayla'nın korkunç kar canavarı Pamuk artık sizin. 70 kiloluk tüy yumağı iki şehir arasında dönüşümlü kalıyor ve her kavuşmanızda ikinizi birden yere yatırıp yüzünüzü yalıyor. Profesör onu hâlâ kıskanıyor. Karlıyayla'da artık kimse geceleri korkmuyor; sadece biraz yalnız hissediyorlar.`},
   tursu:{i:'🥒',t:'Turşu İmparatorluğu',h:'Şampiyon olun ve pastada cesur bir tarif deneyin.',b:`Şampiyonluk kupası ve efsanevi turşulu pastayla bir marka kurdunuz: "İrem & Cengiz Turşuları". Sloganınız: "Uzaktan sevenlerin turşusu." Ürünleriniz iki şehirde birden satılıyor, böylece birbirinizi her market rafında görüyorsunuz. Gülizar Hanım genel müdür.`},
   varis:{i:'👵',t:'Efsanenin Varisleri',h:'Bir yalanı sürdürün ve efsaneyi bulun.',b:`Fikriye ile Necmi saklandıkları ormandan çıktı ve 20 yıl sonra kasabaya döndü. Ramazan Abi sevinçten bayıldı. Efsane çift, kasabanın önünde sizi resmen "varisleri" ilan etti. Artık Ortanokta'nın yeni efsane çifti sizsiniz, bu sefer gerçekten.`},
   kedi:{i:'🐈',t:'Kedi Kraliyet Ailesi',h:'14 kedinin gönlünü fethedin.',b:`14 kedi oy birliğiyle sizi kral ve kraliçe ilan etti. Paşa başınıza taç giydirdi (ton balığı konservesinin kapağı). Artık nereye giderseniz gidin bir kedi sizi tanıyor ve iki şehirde de birer kedi elçiniz var.`},
   sanat:{i:'🎨',t:'Avangart Sanatçı Çift',h:'Kaosu sanata dönüştürün.',b:`"Aşk Beklenmediktir: Keçili Pasta" performansınız bir eleştirmenin gözüne çarptı. Şimdi İstanbul'da serginiz açılıyor. Eleştirmenler "Hiçbir şey anlamadık, muhteşem" diyor. Bir sonraki eseriniz: "Donmuş Ekran: Uzak Mesafe Üzerine Bir Dans".`},
-  bilgin:{i:'🧠',t:'Birbirini Ezbere Bilenler',h:'Mini oyunlarda neredeyse her cevabı tutturun.',b:`Ramazan Abi'nin taksisinden Yargıç Nurten'in sınavına kadar neredeyse her soruda aynı cevabı verdiniz. Kasabada bir efsane doğdu: "Birbirini ezbere bilen çift." Artık Ortanokta'da yeni evlenenler sizin sorularınızla sınanıyor ve kimse sizin puanınızı geçemiyor.`},
+  bilgin:{i:'🧠',t:'Birbirini Ezbere Bilenler',h:'Mini oyunlarda neredeyse her cevabı tutturun.',b:P=>`Ramazan Abi'nin taksisinden ${P.flags.yaylaGece?'Karlıyayla\'nın yıldızlarına':'Yargıç Nurten\'in sınavına'} kadar neredeyse her soruda aynı cevabı verdiniz. Kasabada bir efsane doğdu: "Birbirini ezbere bilen çift." Artık Ortanokta'da yeni evlenenler sizin sorularınızla sınanıyor ve kimse sizin puanınızı geçemiyor.`},
   album:{i:'📸',t:'Bir Fotoğraf, İki Şehir',h:'Bir anı yakalayın ve arkasına bir şey yazın.',b:`Polaroid fotoğrafı ikiye kesmediniz; onun yerine pazardaki amcaya bir kopyasını daha çektirdiniz. Arkasına yazdığınız not artık iki şehirde, iki başucunda duruyor. İkinizin de gözleri kapalı çıkmış, ama bunun hayatınızın en güzel fotoğrafı olduğunu biliyorsunuz.`},
   fener:{i:'🏮',t:'Fenerdeki Dilek',h:'Gökyüzüne bir dilek gönderin ve kalplerinizi aynı yerde buluşturun.',b:`Fener Gecesi'nde uçurduğunuz fener iki kasabanın üstünde süzülüp gözden kayboldu. Ertesi sabah otobüsler ayrı yönlere giderken ikinizin telefonuna aynı anda bir bildirim geldi: bir sonraki buluşmaya kalan gün sayısı. Dileğinizin ne olduğunu ikiniz de biliyorsunuz.`},
+  yildiz:{i:'🌌',t:'Yıldıza Verilen İsim',h:'Bir dağın tepesinde gökyüzüyle anlaşın.',b:`Karlıyayla rasathanesinde yıldızların altında verdiğiniz cevaplar o kadar uyumluydu ki Muhtar Zehra Hanım rasathanenin defterine yeni bir yıldız kaydetti: "İrem-Cengiz". Artık geceleri ikiniz de kendi şehrinizden aynı yıldıza bakıyorsunuz. Aranızda kilometreler var ama gökyüzünde sadece bir parmak boşluk.`},
+  dugun:{i:'💐',t:'Buketi Kim Tuttu?',h:'Bir düğünde havada uçan bir şeyi birlikte yakalayın.',b:`Nadide Teyze'nin buketini aynı anda, ikiniz birden tuttunuz. Bütün kasaba alkışladı, Ramazan Abi davulcuyu "şimdiden" ayarladı, Rıza Dede değirmende "bir sonraki düğünün unu"nu öğütmeye başladı. Siz kızarıp gülüyorsunuz. Buket kurudu ama ikiye bölüp birer parçasını kitaplarınızın arasına koydunuz.`},
   ruh:{i:'💞',t:'Ruh İkizleri',h:'Neredeyse her kararda anlaşın.',b:`Bu kadar çok kararda aynı şeyi seçmek tesadüf olamaz: ikiniz aynı frekanstasınız. Ortanokta'da adınıza bir sokak açılıyor: "İrem ile Cengiz Sokağı". Sokağın başında gözlüklü bir keçi heykeli var.`},
   kaos:{i:'🌪️',t:'Efsanevi Kaos Ustaları',h:'Neredeyse hiçbir kararda anlaşmayın.',b:`Neredeyse hiçbir konuda anlaşamadınız ve yine de iki kasabanın en sevilen çifti oldunuz. Nereye gitseniz bir şey patlıyor, bir şey uçuyor, bir keçi bir şey yiyor. Ama hep birlikte. Ortanokta size fahri "Kaos Hemşehrisi" unvanı veriyor.`},
-  mektup:{i:'💌',t:'Cepteki Mektuplar',h:'Vedada sözler yerine kâğıt.',b:`Otobüsler ters yönlere kalktı. İkiniz de aynı anda cebinizdeki mektubu açtınız. İki mektupta da aynı cümle vardı. O cümleyi siz biliyorsunuz. Mesafe bazen sadece bir otobüs yolculuğu kadar.`},
-  klasik:{i:'📅',t:'Görüşmek Üzere',h:'En sade veda.',b:`Macera bitti, otobüsler kalktı, ama otogarın duvarında bir kâğıt asılı: bir sonraki buluşmanızın tarihi. Ramazan Abi her sabah o kâğıda bakıp gün sayıyor. Siz de öyle. Ortanokta sizi bekliyor.`}
+  mektup:{i:'💌',t:'Cepteki Mektuplar',h:'Vedada sözler yerine kâğıt.',b:P=>`${P.flags.istasyon?'Tren kavşakta ikiye ayrıldı; vagonlarınız ters yönlere gitti.':'Otobüsler ters yönlere kalktı.'} İkiniz de aynı anda cebinizdeki mektubu açtınız. İki mektupta da aynı cümle vardı. O cümleyi siz biliyorsunuz. Mesafe bazen sadece bir ${P.flags.istasyon?'tren':'otobüs'} yolculuğu kadar.`},
+  klasik:{i:'📅',t:'Görüşmek Üzere',h:'En sade veda.',b:P=>P.flags.istasyon?`Macera bitti, tren kalktı, ama istasyonun duvarında bir kâğıt asılı: bir sonraki buluşmanızın tarihi. Makinist Vahit o gün için Ekspres'i bir kez daha çalıştıracağına söz verdi. Ramazan Abi her sabah o kâğıda bakıp gün sayıyor. Siz de öyle.`:`Macera bitti, otobüsler kalktı, ama otogarın duvarında bir kâğıt asılı: bir sonraki buluşmanızın tarihi. Ramazan Abi her sabah o kâğıda bakıp gün sayıyor. Siz de öyle. Ortanokta sizi bekliyor.`}
 };
 const ENDING_ORDER = Object.keys(ENDINGS);
 
@@ -108,11 +117,13 @@ const RPS_ROUNDS = 3;
 // =====================================================================
 const CH = {
   0:'Hazırlık', 1:'Bölüm 1 · Ortanokta\'ya Hoş Geldiniz', 2:'Bölüm 2 · Kasabayı Keşfet', 3:'Bölüm 3 · Festival Günü',
-  4:'Bölüm 4 · Profesör Firarda', 5:'Bölüm 5 · Ötenokta', 6:'Bölüm 6 · Büyük Final'
+  4:'Bölüm 4 · Profesör Firarda', 5:'Bölüm 5 · Ötenokta', 6:'Bölüm 6 · Büyük Final',
+  '4b':'Bölüm 4 · Gece Treni', '5b':'Bölüm 5 · Karlıyayla', '6b':'Bölüm 6 · Ortanokta Düğünü'
 };
 const CH_SUB = {
   0:'Her macera bir süper güçle başlar.', 1:'Haritanın tam ortasında bir buluşma.', 2:'Üç durak, beş mekân, sayısız sır.',
-  3:'Turşu, şöhret ve bir keçi.', 4:'Gökyüzünde bir keçi var.', 5:'Düşman topraklarında bir dava.', 6:'Pasta, fenerler ve veda.'
+  3:'Turşu, şöhret ve bir keçi.', 4:'Gökyüzünde bir keçi var.', 5:'Düşman topraklarında bir dava.', 6:'Pasta, fenerler ve veda.',
+  '4b':'Raylarda bir keçi var.', '5b':'Kar, yıldızlar ve bir canavar.', '6b':'Bir gelin, bir damat, bir keçi ve bir buket.'
 };
 
 const S = {
@@ -245,15 +256,15 @@ teselli:{ch:3, title:'Kaybedenler Köşesi', art:'festival', sp:'gulizar',
    ok:`Dilekçeniz o kadar ikna edici ki jüri kararı bozuyor! Finale kaldınız!`,
    fail:`Jüri dilekçenizi turşu kavanozunun altına koyuyor. Gülizar Hanım "Mızıkçılar" diye homurdanıyor.`, go:'duello', goF:'balon'},
   {t:'Kaderi kabul edip pamuk şeker almak', s:'pamuk şeker', st:'sa', fx:{flag:{dilek:1}},
-   ok:`Pamuk şekerin içinden küçük bir kâğıt çıkıyor: "Bugün şanslı gününüz." Her şeye rağmen içiniz ısınıyor.`, go:'balon'}
+   ok:`Pamuk şekerin içinden küçük bir kâğıt çıkıyor: "Bu gece şanslı gecenizdir." Akşam olurken bankta oturup pamuk şekerinizi bitiriyorsunuz. Uzaklardan bir düdük sesi geliyor…`, go:'tren'}
  ]},
 
 duello:{ch:3, title:'Final Düellosu', art:'duello', sp:'gulizar',
  text:c=>`${c.from==='teselli'?'İtirazınız kabul edildi, finaldesiniz! ':''}Karşınızda Muhtar Bey ile Gülizar Hanım. Gülizar Hanım kollarını sıvıyor:<br><br><i>"Finalde turşu yok. Düellonun türünü siz seçin."</i><br><br>Ödül: Altın Turşu Kupası ve… kasabanın gözlüklü keçisi Profesör.`,
  choices:[
   {t:'Dans düellosu', s:'dans', st:'ck', check:c=>({dc:10-(c.f('juri')?1:0)}), fx:{inv:['+altin','+profesor'], flag:{sampiyon:1}}, fxF:{npc:{gulizar:1}},
-   ok:`Görüntülü konuşmalarda ekran donunca yaptığınız "donmuş ekran" dansı kasabayı yıkıyor. ŞAMPİYONSUNUZ! Kupa ve Profesör sizin.`,
-   fail:`Muhtar Bey ile Gülizar Hanım'ın tangosu kusursuzdu. Kaybettiniz, ama Gülizar Hanım cesaretinizi takdir ediyor.`, go:'balon'},
+   ok:`Görüntülü konuşmalarda ekran donunca yaptığınız "donmuş ekran" dansı kasabayı yıkıyor. ŞAMPİYONSUNUZ! Kupa ve Profesör sizin. Kutlama akşama kadar sürüyor…`,
+   fail:`Muhtar Bey ile Gülizar Hanım'ın tangosu kusursuzdu. Kaybettiniz, ama Gülizar Hanım cesaretinizi takdir ediyor. Dans pisti boşalırken uzaktan bir tren düdüğü duyuluyor.`, go:'tren'},
   {t:'"Birbirinizi ne kadar tanıyorsunuz?" bilgi yarışması', d:'Gerçek sorular: birbiriniz hakkında ne kadar çok bilirseniz o kadar iyi.', s:'bilgi yarışması', st:'ze',
    ok:`Gülizar Hanım ellerini ovuşturuyor: "Bilgi yarışması! Bunu 8 yıldır kimse bizden almadı." Muhtar Bey sahneye bir masa ve iki zil getiriyor.`, go:'duello_bilgi'},
   {t:'Gülizar Hanım ile bilek güreşi', s:'bilek güreşi', st:'ce', check:c=>({dc:11-(c.f('juri')?1:0)}), fx:{inv:['+altin','+profesor'], flag:{sampiyon:1}, npc:{gulizar:2}}, fxF:{npc:{gulizar:2}},
@@ -265,7 +276,7 @@ panayir:{ch:3, title:'Panayır', art:'panayir', sp:'anlatici',
  text:`Panayırda dolaşıyorsunuz. Bir yanda falcı Melahat'ın çadırı, bir yanda atış standı, ötede dev bir balonun dibinde horlayan Kaptan Hayri.`,
  choices:[
   {t:'Falcı Melahat\'a fal baktırmak', s:'fal', st:'sa', fx:{flag:{kehanet:1}},
-   ok:`Melahat fincanı çeviriyor: "Gökyüzünde bir keçi görüyorum. Ve bir mahkeme. Ve bir pasta. Çok büyük bir pasta." Saçmalık gibi geliyor. Şimdilik.`, go:'balon'},
+   ok:`Melahat fincanı çeviriyor: "Bir keçi görüyorum… ya gökyüzünde ya raylarda. Ve karlı bir dağ. Ve bir düğün." Falın ortasında dışarıdan bir tren düdüğü duyuluyor. Melahat fincanı bırakıp "İşte başladı" diyor.`, go:'tren'},
   {t:'Atış standında şansını denemek', s:'atış standı', st:'ce', check:{dc:9}, fx:{inv:['+durbun']},
    ok:`Hepsini vuruyorsunuz! Ödül: eski ama sağlam bir <b>dürbün</b>. Uzağı görmek uzak mesafe çiftine yakışır.`,
    fail:`Hiçbirini vuramıyorsunuz. Teselli ödülü olarak bir sakız alıyorsunuz. Sakız da bayat.`, go:'balon'},
@@ -280,14 +291,14 @@ konusma:{ch:3, title:'Sahte Çiftin Konuşması', art:'konusma', sp:'ramazan',
    ok:`"20 yıl uzak kaldık ama kalbimiz hep buradaydı…" Kasaba hıçkırıklara boğuluyor. Ramazan Abi üç mendil bitiriyor.`,
    fail:`Konuşmanın ortasında Fikriye'nin doğum yerini yanlış söylüyorsunuz. Kalabalık uğulduyor. Ramazan Abi kırgın.`, go:'balon'},
   {t:'Gerçeği itiraf etmek', s:'gerçeği itiraf', st:'ze', fx:{npc:{ramazan:1, gulizar:1}, flag:{durust:1, alias:0}},
-   ok:`"Aslında biz İrem ile Cengiz'iz. Uzaktan sevgiliyiz ve sadece buluşmak istedik." Kısa bir sessizlik… sonra alkış. Gülizar Hanım "Dürüstlük her şeydir" diyor.`, go:'balon'},
+   ok:`"Aslında biz İrem ile Cengiz'iz. Uzaktan sevgiliyiz ve sadece buluşmak istedik." Kısa bir sessizlik… sonra alkış. Gülizar Hanım "Dürüstlük her şeydir" diyor. Alkışlar dinerken uzaktan, 40 yıldır sessiz olan istasyondan bir düdük sesi yükseliyor.`, go:'tren'},
   {t:'Konuşma yerine türkü söylemek', s:'türkü', st:'sa', check:{dc:10}, fx:{npc:{ramazan:2}},
    ok:`Uydurduğunuz türkü kasabanın yeni marşı oluyor. Ramazan Abi taksisinin hoparlöründen sürekli çalacak.`,
    fail:`Davulcu yanlış ritim çalıyor, siz yanlış yerden giriyorsunuz. Herkes nazikçe alkışlıyor. Çok nazikçe.`, go:'balon'}
  ]},
 
 balon:{ch:4, title:'Balon Kalkıyor!', art:'balon', sp:'anlatici', onEnter:{inv:['-profesor']},
- text:c=>`Festivalin en coşkulu anında bir çığlık yükseliyor! ${c.has('profesor')?'Profesör kucağınızdan sıyrılıp':'Kasabanın gözlüklü keçisi Profesör kalabalığı yararak'} sıcak hava balonunun sepetine atlıyor ve halatı kemiriyor. Halat kopuyor, balon <b>yükselmeye başlıyor!</b> Kaptan Hayri hâlâ yerde horluyor.${c.f('kehanet')?'<br><br>Falcı Melahat\'ın sözleri aklınızda yankılanıyor: "Gökyüzünde bir keçi…"':''}${c.f('balonGordu')?'<br><br>Bu balonu ormandaki ağacın tepesinden görmüştünüz!':''}`,
+ text:c=>`Festivalin en coşkulu anında bir çığlık yükseliyor! ${c.has('profesor')?'Profesör kucağınızdan sıyrılıp':'Kasabanın gözlüklü keçisi Profesör kalabalığı yararak'} sıcak hava balonunun sepetine atlıyor ve halatı kemiriyor. Halat kopuyor, balon <b>yükselmeye başlıyor!</b> Kaptan Hayri hâlâ yerde horluyor.${c.f('kehanet')?'<br><br>Fal aklınızda yankılanıyor: "Gökyüzünde bir keçi…"':''}${c.f('balonGordu')?'<br><br>Bu balonu ormandaki ağacın tepesinden görmüştünüz!':''}`,
  choices:[
   {t:'Halata atlayıp tırmanmak!', s:'halata tırmanmak', st:'ce', check:{dc:10}, fx:{flag:{rode:1}},
    ok:`Çamaşır ipine asılmış iki çorap gibi ama tırmanıyorsunuz! Sepete düşüyorsunuz. Profesör "geç kaldınız" der gibi bakıyor.`,
@@ -314,6 +325,9 @@ gokyuzu:{ch:4, title:'Pilotsuz Gökyüzü', art:'gokyuzu', sp:'anlatici', onEnte
   {t:'Belediye binasının çatısına kusursuz bir iniş', s:'çatıya iniş', st:'ze', check:{dc:10}, fx:{npc:{tahsin:2}}, fxF:{npc:{tahsin:-2}},
    ok:`Balonu bayrak direğinin yanına kusursuzca indiriyorsunuz. Aşağıdaki Başkan Tahsin bile etkileniyor: "Ne iniş ama!" Yine de kurallar kurallardır: sizi meydana çağırıyor.`,
    fail:`Balon bacaya takılıyor, çatının yarısı çöküyor ve Başkan Tahsin'in tören pastası ezilmiş durumda. Başkan çok, çok kızgın. Jandarma geliyor.`, go:'cift_testi'},
+  {t:'Kum torbalarını atıp ufka yükselmek!', s:'ufka yükselmek', st:'ce', check:{dc:12}, fx:{flag:{soloBalon:1}}, fxF:{kaos:1}, go:'END:seyyah', goF:'cift_testi',
+   ok:`Kum torbaları birer birer düşüyor, balon Ötenokta'nın üstünden süzülüp bulutların arasına giriyor. Aşağıda bir yerde Kaptan Hayri uyanıyor ve telsizine sarılıyor…`,
+   fail:`İlk kum torbası Başkan Tahsin'in bahçesindeki çardağa düşüyor. Balon yükseleceğine iniyor; sepet tam da belediyenin önüne konuyor. Jandarma geliyor.`},
   {t:'Dürbünle güvenli bir yer bulmak', s:'dürbünle bakmak', st:'ze', req:c=>c.has('durbun'), rq:'🔭 Dürbün gerekli', fx:{flag:{muze:1}, npc:{tahsin:1}},
    ok:`Dürbünle kasabanın kenarındaki Turşu Müzesi'nin bahçesini görüp yumuşak bir iniş yapıyorsunuz. Müzede 1926 kavgasının belgelerini okuyup tarihi öğreniyorsunuz. Çıkışta sizi jandarma bekliyor, ama artık elinizde bir koz var.`, go:'cift_testi'}
  ]},
@@ -326,7 +340,7 @@ gokyuzu_pilot:{ch:4, title:'Kaptan Hayri\'nin İlk Uçuşu', art:'gokyuzu', sp:'
   {t:'Ötenokta\'ya güvenli iniş', s:'güvenli iniş', st:'ze', fx:{npc:{tahsin:1, hayri:1}},
    ok:`Hayri ilk inişini kasaba meydanına yapıyor. Biraz sarsıntılı ama güvenli. Ötenokta halkı ve jandarma etrafınızı sarıyor.`, go:'cift_testi'},
   {t:'Hayri\'ye "Biraz daha uçalım" demek', s:'biraz daha uçmak', st:'sa', fx:{npc:{hayri:2}},
-   ok:`Gün batımında iki kasabanın üzerinde süzülüyorsunuz. Hayatınızın en güzel manzarası. Sonra rüzgâr dönüyor ve sizi Ötenokta meydanına, jandarmanın tam önüne bırakıyor.`, go:'cift_testi'}
+   ok:`Gün batımında iki kasabanın üzerinde süzülüyorsunuz. Hayatınızın en güzel manzarası. Sonra rüzgâr sertleşiyor ve balonu Ötenokta'nın çok ötesine, karlı dağlara doğru sürüklüyor…`, go:'yayla'}
  ]},
 
 takip:{ch:4, title:'Yerden Takip', art:'yol', sp:c=>c.f('taksi')?'ramazan':'anlatici',
@@ -339,6 +353,8 @@ takip:{ch:4, title:'Yerden Takip', art:'yol', sp:c=>c.f('taksi')?'ramazan':'anla
    fail:`Geç kalıyorsunuz. Profesör bu arada Başkan Tahsin'in bıyığının yarısını yemiş. Keçinizi yakalıyorsunuz ama Başkan hiç mutlu değil. Jandarma geliyor.`, go:'cift_testi'},
   {t:'14 kediyi çağırıp kedi ordusu kurmak', s:'kedi ordusu', st:'ck', req:c=>c.n('kediler')>=2, rq:'🐈 Kedilerle dost olmanız gerekli', fx:{flag:{kediOrdusu:1}, inv:['+profesor']},
    ok:`Bir ıslık ve 14 kedi yanınızda. Paşa önde, kediler arkada Ötenokta'ya yürüyorsunuz. Profesör kedileri görünce balondan kendiliğinden iniyor. Kasaba meydanında herkes bu manzarayı şaşkınlıkla izliyor, jandarma dahil.`, go:'cift_testi'},
+  {t:'Balonu boş verip Ramazan Abi\'yle yola devam etmek', s:'sonsuz yol', st:'ce', req:c=>c.f('taksi') && c.n('ramazan')>=5, rq:'🚕 Ramazan Abi ile can ciğer olmalısınız (❤️5)', go:'END:taksi',
+   ok:`Ramazan Abi aynadan size bakıyor. Siz ona bakıyorsunuz. Kimse "dur" demiyor. Tofaş Ötenokta tabelasını geçip yoluna devam ediyor…`},
   {t:'Tam haritadaki gizli geçidi kullanmak', s:'gizli geçit', st:'ze', req:c=>c.has('harita')&&c.has('harita2'), rq:'🗺️ Haritanın iki yarısı da gerekli', fx:{inv:['+profesor'], npc:{tahsin:2}, flag:{gecit:1}},
    ok:`İki yarıyı birleştirince ortaya çıkan gizli geçitten Ötenokta'ya balondan çok önce varıyorsunuz. Meydanda soluklanırken balon iniyor ve Profesör kucağınıza atlıyor. Başkan Tahsin, düşman kasabadan bu kadar sakin gelen birini ilk kez görüyor. Yine de jandarma çağırmadan edemiyor.`, go:'cift_testi'}
  ]},
@@ -362,8 +378,8 @@ mahkeme:{ch:5, title:'Casusluk Davası', art:'mahkeme', sp:'tahsin',
    ok:`Uyduruk bir türküyle hikâyenizi anlatıyorsunuz. Başkan Tahsin'in bıyığı titriyor, ağlıyor. Yargıç tokmağı vuruyor: "Beraat!"`,
    fail:`Şarkı güzel ama Yargıç Nurten Hanım'ın kulakları hassas. Tokmak iniyor: "Hapis!"`, go:'pasta', goF:'hapis'},
   {t:'Dürüstçe her şeyi anlatmak', s:'dürüst savunma', st:'ze', check:c=>({dc:9 - Math.max(-2,Math.min(2,c.n('tahsin'))) - (c.f('durust')?2:0) - ((c.f('muze')||c.f('tarihBilgi'))?2:0) - (c.f('otenoktaBilgi')?1:0) + (c.f('tarifIfsa')?2:0) - Math.min(3, c.P.flags.test||0)}),
-   ok:`Farklı şehirler, donan aramalar, buluşma, keçi, balon… Meydanda herkes kendi uzak mesafe hikâyesini anlatmaya başlıyor. Yargıç: "Bu çift casus olamaz. Beraat!"`,
-   fail:`Hikâye o kadar saçma ki kimse inanmıyor. Tokmak iniyor: "Hapis!"`, go:'pasta', goF:'hapis'},
+   ok:c=>(c.f('muze')||c.f('tarihBilgi')) ? `Farklı şehirler, donan aramalar, buluşma, keçi… ve 1926. Kavganın bir tarif kâğıdının ikiye yırtılmasıyla başladığını anlatınca meydan susuyor. Yaşlılardan biri cebinden sararmış bir yarım kâğıt çıkarıyor: tarifin Ötenokta yarısı! Yargıç: "Beraat. Ve sanırım tarih yeniden yazılıyor."` : `Farklı şehirler, donan aramalar, buluşma, keçi, balon… Meydanda herkes kendi uzak mesafe hikâyesini anlatmaya başlıyor. Yargıç: "Bu çift casus olamaz. Beraat!"`,
+   fail:`Hikâye o kadar saçma ki kimse inanmıyor. Tokmak iniyor: "Hapis!"`, go:c=>(c.f('muze')||c.f('tarihBilgi'))?'baris':'pasta', goF:'hapis', fx:c=>(c.f('muze')||c.f('tarihBilgi'))?{flag:{tarifVar:1}, npc:{tahsin:2}}:null},
   {t:'Profesör\'ü avukatınız olarak tanıtmak', s:'keçi avukat', st:'sa', req:c=>c.has('profesor'), rq:'🐐 Profesör yanınızda olmalı', check:c=>({dc:8 - (c.has('kitap')?3:0) - Math.min(3, c.P.flags.test||0)}),
    ok:`Profesör arka ayaklarına kalkıp gözlüğünü düzeltiyor: "Meee." Yargıç ikna oluyor: "Bu keçi haklı. Beraat!"`,
    fail:`Profesör savunma yapacağına dava dosyasını yiyor. Yargıç "Delil karartma!" diye bağırıyor: "Hapis!"`, go:'pasta', goF:'hapis'},
@@ -383,12 +399,14 @@ hapis:{ch:5, title:'Ötenokta Hapishanesi', art:'hapis', sp:'sukru', onEnter:{fl
  choices:[
   {t:'Paslı anahtarı kilitte denemek', s:'paslı anahtar', st:'sa', req:c=>c.has('anahtar'), rq:'🗝️ Paslı anahtar gerekli', fx:{inv:['-anahtar']},
    ok:`Klik! Kapı açılıyor. Meğer Nadide Teyze gençliğinde bu hapishanenin müdürüymüş. Şükrü çayına dalmışken sessizce kaçıyorsunuz.`, go:'pasta'},
-  {t:'Gardiyan Şükrü ile tavla oynayıp özgürlüğe bahse girmek', s:'tavla bahsi', st:'ze', check:{dc:9},
+  {t:'Gardiyan Şükrü ile tavla oynayıp özgürlüğe bahse girmek', s:'tavla bahsi', st:'ze', check:{dc:10},
    ok:`Son zarda düşeş! Şükrü sözünü tutup kapıyı açıyor: "Ama bir rövanş isterim."`,
    fail:`Şükrü sizi 5-0 yeniyor. Kapı kapalı kalıyor. Şükrü "Yarın yine oynarız" diyor. Yarın, öbür gün, ondan sonraki gün…`, go:'pasta', goF:'END:hapis'},
-  {t:'Kaşıkla tünel kazmak', s:'kaşıkla tünel', st:'sa', check:{dc:10},
+  {t:'Kaşıkla tünel kazmak', s:'kaşıkla tünel', st:'sa', check:{dc:11},
    ok:`Üç saat kazdıktan sonra tünel… kasabanın pastanesinin mutfağına çıkıyor. Özgürsünüz ve önünüzde dev bir pasta hamuru var.`,
    fail:`Kaşık bükülüyor. Şükrü size yeni bir kaşık veriyor, "kahvaltı için" diyor. Kahvaltı uzun sürecek.`, go:'pasta', goF:'END:hapis'},
+  {t:'Hücrede kalıp Şükrü ile tavla turnuvası kurmak', s:'hücrede kalmak', st:'ck', fx:{flag:{turnuva:1}}, go:'END:hapis',
+   ok:`"Aslında… burası fena değil." Şükrü'nün gözleri parlıyor. Hücrenin duvarına bir turnuva tablosu çiziyorsunuz.`},
   {t:'Ramazan Abi\'nin kurtarma operasyonu', s:'Ramazan kurtarıyor', st:'ck', req:c=>c.n('ramazan')>=3, rq:'🚕 Ramazan Abi ile kanka olmanız gerekli (❤️3)',
    ok:`Tofaş hapishanenin önüne yanaşıyor. Ramazan Abi, Şükrü'nün eski askerlik arkadaşı çıkıyor. İki dost kucaklaşırken siz sessizce taksiye biniyorsunuz.`, go:'pasta'},
   {t:'Gardiyan Şükrü\'ye lokum rüşveti', s:'lokum rüşveti', st:'sa', req:c=>c.has('lokum'), rq:'🍬 Lokum gerekli', fx:{inv:['-lokum']},
@@ -443,9 +461,9 @@ veda:{ch:6, title:'Otogarda Veda', art:'veda', sp:'ramazan',
    ok:`Takvimleri açıp tarihi seçiyorsunuz. Ramazan Abi tarihi kocaman harflerle yazıp otogarın duvarına asıyor. Kornalar çalıyor…`, go:'end'},
   {t:'Birbirinizin cebine gizli bir mektup bırakmak', s:'gizli mektup', st:'ck', fx:{flag:{mektup:1}},
    ok:`Son kez sarılırken ikiniz de gizlice diğerinin cebine bir mektup bırakıyorsunuz. İkiniz de öbürünün fark etmediğini sanıyor. Kornalar çalıyor…`, go:'end'},
-  {t:'Profesör için ortak velayet anlaşması imzalamak', s:'ortak velayet', st:'sa', req:c=>c.has('profesor'), rq:'🐐 Profesör yanınızda olmalı', fx:{flag:{velayet:1}},
+  {t:'Profesör için ortak velayet anlaşması imzalamak', s:'ortak velayet', st:'sa', req:c=>c.has('profesor') && (c.has('kitap')||c.f('keciDans')||c.f('pamukKahraman')||c.f('sakin')), rq:'🐐 Profesör ile aranızda özel bir bağ olmalı', fx:{flag:{velayet:1}},
    ok:`Nadide Teyze çantasından noter mührünü çıkarıyor (pansiyon aynı zamanda noterlik). Belge otogarın bankında imzalanıyor. Kornalar çalıyor…`, go:'end'},
-  {t:'Otobüslerden inip Ortanokta\'ya taşınmak!', s:'taşınmak', st:'ce', req:c=>(c.n('ramazan')+c.n('gulizar')+c.n('kediler'))>=7, rq:'Kasabada çok güçlü dostluklar gerekli (Ramazan + Gülizar + Kediler toplam ❤️7)', go:'END:yerlesik',
+  {t:'Otobüslerden inip Ortanokta\'ya taşınmak!', s:'taşınmak', st:'ce', req:c=>(c.n('ramazan')+c.n('gulizar')+c.n('kediler'))>=9, rq:'Kasabada çok güçlü dostluklar gerekli (Ramazan + Gülizar + Kediler toplam ❤️9)', go:'END:yerlesik',
    ok:`Kapılar kapanmak üzereyken ikiniz de aynı anda otobüslerden atlıyorsunuz…`}
  ]}
 };
@@ -571,7 +589,7 @@ duello_bilgi:{ch:3, title:'Final: Bilgi Yarışması', art:'duello', sp:'gulizar
       text:m === n ? `Dörtte dört! Gülizar Hanım mikrofonu bırakıp ikinizi birden kucaklıyor: "8 yıldır böylesini görmedim." ŞAMPİYONSUNUZ! Kupa ve Profesör sizin.`
         : `Dörtte üç, tam sınırda! Seyirciler ayağa kalkıyor. Gülizar Hanım elinizi sıkıyor: "Birbirinizi gerçekten tanıyorsunuz." ŞAMPİYONSUNUZ! Kupa ve Profesör sizin.`}
    : {fx:{npc:{gulizar:1}}, text:m === 2 ? `Dörtte iki… Kıl payı kaybettiniz. Gülizar Hanım teselli ediyor: "Az kaldı. Daha çok konuşun, seneye gelin."` : `Gülizar Hanım iç çekiyor: "Siz bu festivalden sonra epey konuşacaksınız." Kaybettiniz ama salondaki herkes size gülümsüyor.`}},
- go:'balon'},
+ go:'tren'},
 
 cift_testi:{ch:5, title:'Gerçek Çift Testi', art:'mahkeme', sp:'nurten', choices:[],
  mini:{qs:[['ayni'],['tahmin','irem'],['refleks'],['tahmin','cengiz']],
@@ -606,19 +624,157 @@ gece_mini:{ch:6, title:'Fenerlerin Altında', art:'fener', sp:'anlatici', choice
  go:'veda'}
 });
 
+// =====================================================================
+//  B ROTASI: Gece Treni → Karlıyayla → Ortanokta Düğünü
+// =====================================================================
+Object.assign(S, {
+tren:{ch:'4b', title:'Ortanokta Ekspresi', art:'istasyonGece', sp:'vahit', onEnter:{inv:['-profesor'], flag:{trenBindi:1}},
+ text:c=>`Festival sona ererken kasabanın 40 yıldır kullanılmayan eski istasyonundan bir düdük yükseliyor. Efsaneye göre <b>Ortanokta Ekspresi</b> yılda yalnızca bir kez, festival gecesi geçer. ${c.has('profesor')?'Profesör kucağınızdan sıyrılıp':'Kasabanın gözlüklü keçisi Profesör kalabalığı yararak'} perona koşuyor ve kalkmak üzere olan trenin son vagonuna atlıyor!${c.f('kehanet')?'<br><br>Fal aklınızda yankılanıyor: "Ya gökyüzünde ya raylarda bir keçi…"':''}`,
+ choices:[
+  {t:'Kalkan trene koşarak atlamak', s:'trene atlamak', st:'ce', check:{dc:9}, fxF:{kaos:1},
+   ok:`Film sahnesi gibi: peronda koşuyorsunuz, el ele, son vagonun basamağına aynı anda atlıyorsunuz. Tren hızlanıyor. Başardınız!`,
+   fail:`Biriniz basamağa yetişiyor, öbürü yetişemiyor. Ani bir frenle tren duruyor; makinist kabinden başını uzatıp "Bu kadar dram yeter, binin!" diye bağırıyor. Herkes size bakıyor.`, go:'vagon'},
+  {t:'Makiniste el sallayıp treni durdurmak', s:'treni durdurmak', st:'ck', check:{dc:8}, fx:{npc:{vahit:2}}, fxF:{npc:{vahit:-1}},
+   ok:`Bıyıklı makinist frene basıp gülümsüyor: "40 yıldır bu trene el sallayan ilk yolcular sizsiniz. Ben Vahit. Buyurun, kabine yakın oturun."`,
+   fail:`Makinist frene basıyor ama hiç memnun değil: "Tren durdurulmaz, tren yakalanır!" diye homurdanıyor. Yine de biniyorsunuz.`, go:'vagon'},
+  {t:'Ramazan Abi\'nin taksisiyle trenle yarışmak', s:'trenle yarış', st:'sa', req:c=>c.n('ramazan')>=2, rq:'🚕 Ramazan Abi ile dost olmanız gerekli', fx:{npc:{ramazan:1, vahit:1}},
+   ok:`Tofaş rayların yanındaki toprak yolda trenle başa baş gidiyor. Ramazan Abi korna çalıyor, makinist düdük çalıyor; iki eski dost selamlaşıyor. Bir sonraki hemzemin geçitte trene atlıyorsunuz.`, go:'vagon'},
+  {t:'Keçi Bakımı 101\'deki ıslığı çalmak', s:'keçi ıslığı', st:'ze', req:c=>c.has('kitap'), rq:'📕 Keçi Bakımı 101 gerekli', fx:{npc:{vahit:1}, flag:{sakin:1}},
+   ok:`Islığı duyan Profesör son vagonun penceresinden başını uzatıp size bakıyor ve oturduğu yerden "Meee" diyor: "Siz de gelin." Tren sizi bekliyor gibi yavaşlıyor; sakin sakin biniyorsunuz.`, go:'vagon'}
+ ]},
+
+vagon:{ch:'4b', title:'Yemekli Vagon', art:'tren', sp:'vahit', onEnter:{inv:['+profesor']},
+ text:c=>`Tren karanlık vadide tıkırdıyor. Profesör'ü yemekli vagonda, menüyü yerken buluyorsunuz.${c.n('vahit')>=2?' Makinist Vahit kabinden size el sallıyor.':''} Biraz sonra Vahit anonsu yapıyor:<br><br><i>"Sayın yolcularımız, iki durağımız kaldı. Biri <b>Ötenokta</b>. Öbürü dağların tepesindeki <b>Karlıyayla</b>. Sonra tren sabaha kadar dinlenir. Nerede ineceğinize siz karar verin."</i>`,
+ choices:[
+  {t:'Ötenokta\'da inmek', s:'Ötenokta', st:'ze', fx:{flag:{trenOtenokta:1}},
+   ok:`Tren Ötenokta istasyonunda duruyor. Perona adım attığınız an bir düdük daha: jandarma! "Ortanoktalı casuslar trenle geldi!" Profesör de kucağınızda. Başkan Tahsin peronda bıyığını buruyor.`, go:'cift_testi'},
+  {t:'Karlıyayla\'ya kadar gitmek', s:'Karlıyayla', st:'sa',
+   ok:`İneceğiniz durağı geçiyorsunuz. Tren tırmandıkça pencerelere kar yağmaya başlıyor.`, go:'yayla'},
+  {t:'Mum ışığında akşam yemeği', s:'akşam yemeği', st:'ck', fx:{uyum:1, flag:{yemek:1}},
+   ok:`Garson (aynı zamanda makinist, aynı zamanda biletçi: Vahit) iki tabak kuru fasulye ve bir mum getiriyor. Pencerede ay, karşınızda sevgiliniz. Konuşa konuşa duraklar geçiyor ve tren karlı bir köyde duruyor.`, go:'yayla'},
+  {t:'Vahit\'in yanına, makinist kabinine geçmek', s:'makinist kabini', st:'ce', req:c=>c.n('vahit')>=2, rq:'🚂 Makinist Vahit ile dost olmanız gerekli', go:'END:ekspres',
+   ok:`Vahit size düdüğün ipini uzatıyor: "Hiç inmeseniz? Benim yaşım geçti, bu treni sürecek birilerini 40 yıldır bekliyorum." Birbirinize bakıyorsunuz. Düdüğü birlikte çekiyorsunuz…`}
+ ]},
+
+yayla:{ch:'5b', title:'Karlıyayla', art:'kar', sp:'zehra',
+ text:c=>`${c.from==='gokyuzu_pilot'?'Kaptan Hayri balonu karlı bir köyün meydanına, kardan adamların arasına indiriyor. Profesör kucağınızda titriyor.':'Tren karlı bir dağ köyünde duruyor ve… duruyor. Raylar karla kapanmış. Vahit omuz silkiyor: "Kar kalkana kadar buradayız. Bir gün, belki iki."'}<br><br>Köyün muhtarı Zehra Hanım sizi elinde termosla karşılıyor:<br><br><i>"Hoş geldiniz! Yalnız geceleri dikkat edin: köyün etrafında bir <b>kar canavarı</b> dolaşıyor."</i><br><br>Köylüler aynı anda ciddiyetle başını sallıyor. Profesör titriyor (soğuktan).`,
+ choices:[
+  {t:'Köylülerle kartopu savaşı', s:'kartopu savaşı', st:'ce', check:{dc:9}, fx:{flag:{yaylaDost:1}}, fxF:{kaos:1},
+   ok:`İkiniz sırt sırta veriyorsunuz ve bütün köyü yeniyorsunuz. Zehra Hanım bile kahkahayla teslim oluyor: "Bu köyde size kimse dokunamaz artık."`,
+   fail:`Bütün köy aynı anda size kartopu atıyor. Kafadan ayağa beyazsınız. Köylüler yine de sizi çok sevdi: kaybetmeyi bilen insanlarsınız.`, go:'yayla_gece'},
+  {t:'Kar canavarının izlerini sürmek', s:'iz sürmek', st:'ze', check:{dc:9}, fx:{flag:{canavarIz:1}},
+   ok:`İzler kocaman ama… patili. Köpek patisi. Sonunda karların içinde ters dönmüş kocaman bir mama kabı buluyorsunuz. Kar canavarının aç olduğunu anlıyorsunuz.`,
+   fail:`İzleri bir saat takip ediyorsunuz ve en sonunda kendi ayak izlerinize çıkıyorsunuz. Profesör size acıyarak bakıyor.`, go:'yayla_gece'},
+  {t:'Kardan adam (ve kardan keçi) yapmak', s:'kardan adam', st:'ck', fx:{uyum:1, flag:{kardan:1}},
+   ok:`Kardan adamın burnu havuç, kardan keçinin gözlüğü iki kurabiye. Profesör kardan keçiye bakıp uzun süre düşünüyor ve gözlüğünü yiyor.`, go:'yayla_gece'},
+  {t:'Mantıyla bütün köye ziyafet çekmek', s:'mantı ziyafeti', st:'sa', req:c=>c.has('manti'), rq:'🥟 Mantı gerekli', fx:{inv:['-manti'], flag:{yaylaDost:1}, uyum:1},
+   ok:`7 kilo mantı köy odasında kaynıyor. Bütün köy toplanıyor, Zehra Hanım tarifini istiyor. "Bu tat bizim köye 50 yıldır gelmedi" diyor biri. Artık köyün çocuklarısınız.`, go:'yayla_gece'}
+ ]},
+
+yayla_gece:{ch:'5b', title:'Yıldızların Altında', art:'karGece', sp:'zehra', choices:[], onEnter:{flag:{yaylaGece:1}},
+ mini:{qs:[['ayni'],['tahmin','irem'],['tahmin','cengiz']],
+  intro:`Gece Zehra Hanım sizi köyün tepesindeki küçük, eski rasathaneye çıkarıyor. Battaniyeler, bir termos salep ve hiç görmediğiniz kadar çok yıldız.<br><br><i>"Burada yıldızlar o kadar yakın ki sorulara cevap verirler,"</i> diyor ve sizi yalnız bırakıyor. Teleskobun yanındaki defterde el yazısıyla sorular var…`,
+  reward:(m, n) => m === n
+   ? {fx:{flag:{yildiz:1}, uyum:1}, text:`Üç soruda üç aynı cevap. Tam o anda bir kayan yıldız geçiyor ve ikiniz de aynı anda "Gördün mü?" diyorsunuz. Zehra Hanım ertesi sabah defterde cevaplarınızı görüp uzun süre susuyor.`}
+   : m >= 2 ? {fx:{flag:{yildiz:1}}, text:`Neredeyse hepsi tuttu. Yıldızlar bu kadarına razı gibi; biri göz kırpar gibi parlıyor.`}
+   : {fx:null, text:`Cevaplar pek tutmadı, ama salep sıcak ve gökyüzü çok güzel. Bir süre konuşmadan yıldızları izliyorsunuz.`}},
+ go:'kar_sabah'},
+
+kar_sabah:{ch:'5b', title:'Kar Canavarı', art:'kar', sp:'anlatici',
+ text:c=>`Rasathaneden inerken karların arasında iki parlak göz beliriyor. Sonra kocaman, beyaz, tüylü bir şey size doğru koşuyor: <b>KAR CANAVARI!</b><br><br>…Bir dakika. Kuyruğunu sallıyor. Kar canavarı kocaman bir Kangal! Boynundaki tasmada <b>"PAMUK"</b> yazıyor.${c.f('canavarIz')?' Ters dönmüş mama kabını hatırlıyorsunuz: zavallı Pamuk sadece açmış.':''}<br><br>Sabah olunca güneş açıyor ve ${c.f('trenBindi')?'Vahit trenin düdüğünü çalıyor':'Kaptan Hayri balonu şişiriyor'}. Tam o sırada Ortanokta'dan bir telgraf geliyor: <b>Nadide Teyze ile Değirmenci Rıza Dede evleniyor ve sizi düğüne istiyorlar!</b>`,
+ choices:[
+  {t:'Pamuk\'u sevip ona mama vermek', s:'Pamuk\'u sevmek', st:'ck', fx:c=>({npc:{pamuk:c.f('canavarIz')?3:2}, flag:{pamukYanda:1}}),
+   ok:`Pamuk mamasını bitirip ikinizi birden yere yatırıyor ve yüzünüzü yalıyor. Zehra Hanım şaşkın: "Yıllardır kimseyi sevmemişti." Yola çıkarken Pamuk peşinize takılıyor.`, go:'dugun'},
+  {t:'Köyü toplayıp canavarın sırrını açıklamak', s:'sırrı açıklamak', st:'ze', fx:{flag:{yaylaDost:1, pamukYanda:1}, npc:{pamuk:2}},
+   ok:`Bütün köy meydanda. "Kar canavarınız aç bir köpek!" Önce sessizlik, sonra kahkaha. Köylüler Pamuk'a bir kulübe yapmaya karar veriyor. Zehra Hanım size köyün fahri hemşehrilik belgesini veriyor. Yola çıkarken Pamuk peşinize takılıyor; kimse onu durduramıyor.`, go:'dugun'},
+  {t:'Kışı Karlıyayla\'da geçirmeye karar vermek', s:'yaylada kalmak', st:'sa', req:c=>c.f('yaylaDost')||c.f('yildiz'), rq:'❄️ Köyle aranızda güçlü bir bağ olmalı', go:'END:dag',
+   ok:`Telgrafa "Tebrikler, ama gelemiyoruz: karda mahsuruz (ve mutluyuz)" diye cevap yazıyorsunuz. Zehra Hanım sobayı yakıyor.`},
+  {t:'Hemen yola çıkıp düğüne yetişmek', s:'düğüne koşmak', st:'ce',
+   ok:c=>`${c.f('trenBindi')?'Trene':'Balona'} atlıyorsunuz. Arkada Pamuk koşuyor, havlıyor, sonra vazgeçip köye dönüyor. Öğlene doğru Ortanokta'nın çan sesleri duyuluyor.`, go:'dugun'}
+ ]},
+
+dugun:{ch:'6b', title:'Ortanokta Düğünü', art:'dugun', sp:'nadide',
+ text:c=>`Ortanokta meydanı çiçeklerle donatılmış. 40 yıl önce küsüp ayrılan Nadide Teyze ile Değirmenci Rıza Dede sonunda evleniyor!${c.f('v_degirmen')?' Rıza Dede size göz kırpıyor: "Değirmeni ziyaret eden gençler!"':''}${c.f('pamukYanda')?' Pamuk meydanda 14 kediyle tanışıyor; kediler ağaca, Pamuk kuyruğunu sallıyor.':''}<br><br>Nadide Teyze elinizi tutuyor:<br><br><i>"Sizi görünce cesaretlendik evladım. Siz o kadar uzaktan birbirinizi sevebiliyorsanız, biz de aynı kasabadan sevebiliriz. Hadi, düğünde bir göreviniz olsun!"</i>`,
+ choices:[
+  {t:'Düğün pastasını yapmak', s:'düğün pastası', st:'ze', check:c=>({dc:c.has('un')?6:9}), fx:{flag:{dugunPasta:1}}, fxF:{kaos:1},
+   ok:c=>`${c.has('un')?'Rıza Dede\'nin ununu görünce gözleri doluyor. ':''}Beş katlı, beyaz, kusursuz bir pasta. Tepesine iki küçük figür koyuyorsunuz: bir teyze ve bir dede. Nadide Teyze ağlıyor.`,
+   fail:`Pasta fırında iki katına çıkıyor ve fırının kapağını açıyor. Mutfak un içinde. Nadide Teyze gülerek "Ben de gençken böyleydim" diyor.`, go:'nikah'},
+  {t:'Düğün müziğini üstlenmek', s:'düğün müziği', st:'ck', check:{dc:9}, fx:{npc:{ramazan:1, gulizar:1}}, fxF:{kaos:1},
+   ok:`Ramazan Abi'nin taksisindeki türkülerden bir düğün listesi hazırlıyorsunuz. İlk şarkıda bütün kasaba halaya kalkıyor.`,
+   fail:`Hoparlörden yanlışlıkla Ramazan Abi'nin sesli mesajları çalıyor: "Nerdesiniz? Ben kapıdayım." Kasaba gülmekten kırılıyor.`, go:'nikah'},
+  {t:'Nikâh şahidi olmak', s:'nikâh şahidi', st:'sa', fx:{flag:{sahit:1}, uyum:1},
+   ok:`Takım elbiseler ve en ciddi yüz ifadeleriniz. Nadide Teyze sizi "ailemin gençleri" diye tanıtıyor. Gururdan iki santim uzadınız.`, go:'nikah'},
+  {t:'Kedilerle çiçek taşıma alayı kurmak', s:'kedi alayı', st:'ck', req:c=>c.n('kediler')>=2, rq:'🐈 Kedilerle dost olmanız gerekli', fx:{npc:{kediler:2}},
+   ok:`Paşa önde, ağzında bir gül. Arkasında 13 kedi, her birinin ağzında bir çiçek. Gelin yürüyüşü hiç bu kadar ağırbaşlı olmamıştı.`, go:'nikah'}
+ ]},
+
+nikah:{ch:'6b', title:'Yüzükler Nerede?', art:'dugun', sp:'memur',
+ text:c=>`Nikâh memuru gözlüğünü düzeltiyor: "Nadide Hanım, Rıza Bey, yüzükler lütfen."<br><br>Herkes size bakıyor, çünkü yüzükler sizdeydi. Tam kutuyu açacakken ${c.has('profesor')?'Profesör kucağınızdan uzanıp':'kalabalığın arasından Profesör fırlayıp'} <b>yüzük kutusunu kapıyor ve kaçıyor!</b>`,
+ choices:[
+  {t:'Peşinden koşmak', s:'keçi kovalamak', st:'ce', check:{dc:9}, fx:{inv:['+profesor']}, fxF:{inv:['+profesor'], kaos:1},
+   ok:`Meydanın etrafında üç tur, bir masa altı, bir çeşme. Sonunda Profesör'ü yakalıyorsunuz, kutu ağzında, sağlam. Kalabalık ayakta alkışlıyor.`,
+   fail:`Profesör çeşmenin içinden geçip pastanın arkasında kayboluyor. Yarım saat sonra kutuyu kendi getiriyor. Kutu biraz ıslak, yüzükler biraz salyalı.`, go:'buket'},
+  {t:'Pamuk\'a "Getir!" demek', s:'Pamuk, getir!', st:'sa', req:c=>c.f('pamukYanda'), rq:'🐕 Pamuk yanınızda olmalı', fx:{npc:{pamuk:1}, inv:['+profesor'], flag:{pamukKahraman:1}},
+   ok:`Pamuk tek bir sıçrayışla Profesör'ün önünü kesiyor. Profesör kutuyu bırakıyor, Pamuk kutuyu ağzına alıp kuyruk sallayarak size getiriyor. Kasaba Pamuk'u omuzlarına almak istiyor ama Pamuk 70 kilo.`, go:'buket'},
+  {t:'Yüzük yerine kâğıttan iki halka yapmak', s:'kâğıt yüzük', st:'ze', fx:{uyum:1, flag:{kagitYuzuk:1}, inv:['+profesor']},
+   ok:`Peçeteden iki küçük halka katlıyorsunuz. Nikâh memuru tereddüt ediyor ama Nadide Teyze kâğıt yüzüğü parmağına takıp "Bundan güzelini görmedim" diyor. Profesör az sonra gerçek yüzüklerle utanarak geri dönüyor.`, go:'buket'},
+  {t:'Gülüp töreni dansla devam ettirmek', s:'dansla devam', st:'ck', fx:{kaos:1, flag:{guldu:1}, inv:['+profesor']},
+   ok:`"Yüzük de neymiş!" diyerek müziği açıyorsunuz. Herkes dans etmeye başlıyor. Profesör dansın ortasında kutuyu düşürüp kendisi de dansa katılıyor.`, go:'buket'}
+ ]},
+
+buket:{ch:'6b', title:'Gelin Buketi', art:'dugun', sp:'nadide',
+ text:`Nikâh kıyılıyor, davullar çalıyor! Düğünün en heyecanlı anı geldi: Nadide Teyze arkasını dönüyor, gelin buketini iki eliyle havaya kaldırıyor ve… fırlatıyor! Buket tam ikinizin arasına doğru süzülüyor!`,
+ choices:[
+  {t:'İkiniz birden zıplayıp tutmak', s:'buketi tutmak', st:'ce', check:{dc:8}, fx:{flag:{buket:1}, uyum:1}, fxF:{kaos:1},
+   ok:`İki el, bir buket. Aynı anda tutuyorsunuz! Meydan çığlıklarla inliyor. Ramazan Abi "Ben demiştim!" diye bağırıyor. Kime demişti, bilinmiyor.`,
+   fail:`Aynı anda zıplıyorsunuz, kafa kafaya çarpışıyorsunuz ve buketi havada Profesör kapıyor. Ve yiyor.`, go:'dugun_oyun'},
+  {t:'Kenara çekilip Gülizar Hanım\'a bırakmak', s:'Gülizar\'a bırakmak', st:'ck', fx:{npc:{gulizar:2}},
+   ok:`Gülizar Hanım buketi tek eliyle, bilek güreşindeki gibi kararlılıkla yakalıyor. Muhtar Bey kızarıyor. Gülizar Hanım size göz kırpıyor.`, go:'dugun_oyun'},
+  {t:'Düğün halayını başlatmak', s:'halay', st:'sa', fx:{npc:{ramazan:1}},
+   ok:`Buket havadayken mendili kapıp halayı başlatıyorsunuz. Buket kimsenin eline düşmüyor ama halay üç saat sürüyor. Nadide Teyze ile Rıza Dede başta.`, go:'dugun_oyun'}
+ ]},
+
+dugun_oyun:{ch:'6b', title:'Düğün Oyunu', art:'dugun', sp:'ramazan', choices:[],
+ mini:{qs:[['kim'],['ayni'],['kim']],
+  intro:`Düğünün son oyununu Ramazan Abi sunuyor; mikrofon elinde, gözleri dolu:<br><br><i>"Yeni evlilerden önce bir de gençleri sınayalım! Size soracağım, ikiniz de aynı anda cevaplayacaksınız. Bakalım bu kasabaya yeni bir düğün mü geliyor!"</i>`,
+  reward:(m, n) => m === n
+   ? {fx:{flag:{kalp:1}, uyum:1}, text:`Hepsi aynı! Ramazan Abi mikrofonu bırakıp mendilini arıyor. Nadide Teyze ile Rıza Dede birbirine bakıp gülümsüyor: "Bizim gibiler."`}
+   : m >= 2 ? {fx:{flag:{kalp:1}}, text:`Neredeyse hepsi tuttu. Kalabalık "Bir daha! Bir daha!" diye bağırıyor ama Ramazan Abi "Bu kadarı yeter, ben dayanamam" diyor.`}
+   : {fx:null, text:`Cevaplar tutmadı ama kalabalık o kadar güldü ki düğünün en sevilen anı bu oldu.`}},
+ go:'veda_istasyon'},
+
+veda_istasyon:{ch:'6b', title:'İstasyonda Veda', art:'istasyon', sp:'vahit', onEnter:{flag:{istasyon:1}},
+ text:c=>`Düğünün ertesi sabahı Ortanokta'nın eski istasyonu. Makinist Vahit Ekspres'i bu yıl ikinci kez çalıştırmaya karar vermiş: "Sizin için." Tren kavşakta ikiye ayrılacak; ön vagonlar batıya, arka vagonlar doğuya gidecek.<br><br>Bütün kasaba uğurlamaya gelmiş: Nadide Teyze ile Rıza Dede el ele, Ramazan Abi mendiliyle.${c.has('profesor')?' Profesör aranızda; hangi vagona bineceğini bilmiyor.':''}${c.f('pamukYanda')?' Pamuk kuyruğunu sallıyor; o da hangi vagona bineceğini bilmiyor.':''}<br><br><i>"Eee çocuklar… şimdi ne olacak?"</i>`,
+ choices:[
+  {t:'Bir sonraki buluşmanın tarihini hemen belirlemek', s:'yeni tarih', st:'ze', fx:{flag:{tarih:1}},
+   ok:`Takvimleri açıp tarihi seçiyorsunuz. Vahit tarihi tebeşirle istasyonun panosuna yazıyor: "O gün Ekspres yine çalışacak." Düdük çalıyor…`, go:'end'},
+  {t:'Birbirinizin cebine gizli bir mektup bırakmak', s:'gizli mektup', st:'ck', fx:{flag:{mektup:1}},
+   ok:`Son kez sarılırken ikiniz de gizlice diğerinin cebine bir mektup bırakıyorsunuz. İkiniz de öbürünün fark etmediğini sanıyor. Düdük çalıyor…`, go:'end'},
+  {t:'Pamuk\'u yanınıza almak', s:'Pamuk\'u almak', st:'sa', req:c=>c.n('pamuk')>=2, rq:'🐕 Pamuk ile dost olmanız gerekli', fx:{flag:{pamukAlindi:1}},
+   ok:`Pamuk'un önüne iki bilet koyuyorsunuz: biri batıya, biri doğuya. Pamuk ikisini de yiyor. Karar verildi: Pamuk ikinizindir. Düdük çalıyor…`, go:'end'},
+  {t:'Profesör için ortak velayet anlaşması imzalamak', s:'ortak velayet', st:'sa', req:c=>c.has('profesor') && (c.has('kitap')||c.f('keciDans')||c.f('pamukKahraman')||c.f('sakin')), rq:'🐐 Profesör ile aranızda özel bir bağ olmalı', fx:{flag:{velayet:1}},
+   ok:`Nadide Teyze gelinliğinin cebinden noter mührünü çıkarıyor (pansiyon aynı zamanda noterlik). Belge istasyonun bankında imzalanıyor. Düdük çalıyor…`, go:'end'},
+  {t:'Trenden inip Ortanokta\'ya taşınmak!', s:'taşınmak', st:'ce', req:c=>(c.n('ramazan')+c.n('gulizar')+c.n('kediler'))>=9, rq:'Kasabada çok güçlü dostluklar gerekli (Ramazan + Gülizar + Kediler toplam ❤️9)', go:'END:yerlesik',
+   ok:`Tren kıpırdamaya başlamışken ikiniz de aynı anda vagonlardan atlıyorsunuz…`}
+ ]}
+});
+
 function evalEnding(P){
   const f = k => !!P.flags[k], has = i => P.inv.includes(i), n = k => P.npc[k]||0;
   // Önce yolda hak edilen özel sonlar, sonra vedadaki seçim, en son genel sonlar
   if (f('sampiyon') && f('tursuPasta')) return 'tursu';
-  if (f('alias') && f('metNecmi') && n('necmi')>=2) return 'varis';
-  if ((P.mqMatch||0) >= 11) return 'bilgin';
-  if (f('fotoNot') && f('kalp')) return 'album';
-  if (f('fenerDilek') && f('kalp')) return 'fener';
-  if (n('kediler') >= 4) return 'kedi';
-  if (f('sanat') && P.kaos >= 5) return 'sanat';
+  if (f('alias') && f('metNecmi')) return 'varis';
+  if (f('pamukAlindi')) return 'yeti';
   if (f('velayet') && has('profesor')) return 'keci';
-  if (P.uyum >= 16) return 'ruh';
-  if (P.kaos >= 10) return 'kaos';
+  if (n('kediler') >= 4) return 'kedi';
+  if (f('fotoNot') && (f('kalp') || P.uyum >= 6)) return 'album';
+  if (f('fenerDilek') && f('kalp') && P.uyum >= 18) return 'fener';
+  if (f('buket') && f('kalp')) return 'dugun';
+  if (f('yildiz') && f('kalp')) return 'yildiz';
+  if (f('sanat') && P.kaos >= 3) return 'sanat';
+  if ((P.mqMatch||0) >= 11) return 'bilgin';
+  if (P.uyum >= 22) return 'ruh';
+  if (P.kaos >= 6) return 'kaos';
   if (f('mektup')) return 'mektup';
   return 'klasik';
 }
@@ -734,6 +890,8 @@ const BADGES = {
   gorev2:{i:'🕵️', t:'Ajan İkilisi', d:'Aynı oyunda ikiniz de gizli görevinizi başarın.', ok:(A) => A.some(g => g.mis && g.mis.irem && g.mis.cengiz)},
   hapis:{i:'🔒', t:'Sabıkalı', d:'Ötenokta hapishanesine düşün.', ok:(A) => A.some(g => g.jailed)},
   balon:{i:'☁️', t:'Bulut Yolcusu', d:'Sıcak hava balonuna binin.', ok:(A) => A.some(g => g.rode)},
+  tren:{i:'🚂', t:'Gece Yolcusu', d:'Ortanokta Ekspresi\'ne binin.', ok:(A) => A.some(g => g.tren)},
+  yayla:{i:'❄️', t:'Kar Kaşifi', d:'Karlıyayla\'da bir gece geçirin.', ok:(A) => A.some(g => g.yayla)},
   keci:{i:'🐐', t:'Keçi Dostu', d:'Oyunu Profesör yanınızdayken bitirin.', ok:(A) => A.some(g => g.prof)},
   ikna:{i:'🤝', t:'Uzlaşma Ustası', d:'Bir oyunda 3 kez partnerinizin fikrine katılın.', ok:(A) => A.some(g => (g.ikna || 0) >= 3)},
   zar:{i:'🎲', t:'Kaderin Zarları', d:'Taş-kağıt-makasta 3 kez berabere kalıp kararı zara bırakın.', ok:(A) => A.some(g => g.zar)},
@@ -751,7 +909,7 @@ function albumEntry(P){
   return {
     seed:P.seed, at:Date.now(), ending:P.ending, uyum:P.uyum, kaos:P.kaos, mm:P.mqMatch || 0, mt:P.mqTotal || 0,
     moves:P.log.length, ikna:P.ikna || 0, zar:P.log.some(e => e.m === 'zar'), perf:P.log.filter(e => e.mini && e.mm === e.mt).length,
-    jailed:!!P.flags.jailed, rode:!!P.flags.rode, prof:P.inv.includes('profesor'), evts:P.evtCount || 0,
+    jailed:!!P.flags.jailed, rode:!!P.flags.rode, tren:!!P.flags.trenBindi, yayla:!!P.flags.yaylaGece, prof:P.inv.includes('profesor'), evts:P.evtCount || 0,
     visits:['pazar','degirmen','gol','kahve','kutuphane'].filter(v => P.flags['v_' + v]),
     mis:{irem:!!(MISSIONS[P.missions.irem] && MISSIONS[P.missions.irem].ok(P, 'irem')), cengiz:!!(MISSIONS[P.missions.cengiz] && MISSIONS[P.missions.cengiz].ok(P, 'cengiz'))},
     traits:{irem:tr('irem'), cengiz:tr('cengiz')}
@@ -777,11 +935,14 @@ const JOKER_IDS = Object.keys(JOKERS);
 function epilogue(P){
   const f = k => !!P.flags[k], has = i => P.inv.includes(i), out = [], E = P.ending;
   // birlikte yaşadıkları sonlar: uzak mesafe bitti
-  const together = ['yerlesik', 'seyyah', 'zengin'].includes(E);
+  const together = EPI_TOGETHER.includes(E);
   // Profesör
   if (E === 'keci') out.push('Profesör iki şehir arasında o kadar çok yolculuk yaptı ki otobüs firması ona "yılın yolcusu" plaketi verdi.');
   else if (E === 'seyyah') out.push('Profesör navigatörlükte o kadar iyi ki artık haritaları yemeden okuyabiliyor. Neredeyse.');
   else if (E === 'zengin') out.push('Kaptan Profesör yatı iki kez karaya oturttu ama kimse ona kızamıyor.');
+  else if (E === 'ekspres') out.push('Profesör yolculara en sevdiği şeyi ikram ediyor: biletlerini. Önce yiyor, sonra ikram ediyor.');
+  else if (E === 'taksi') out.push('Profesör Tofaş\'ın ön koltuğunda oturuyor ve her benzin istasyonunda bir simit istiyor.');
+  else if (E === 'dag') out.push('Profesör köy okulunun müdürlüğünden emekli olmayı reddediyor; kardan keçi heykeli okulun bahçesinde.');
   else if (E === 'yerlesik') out.push(has('profesor') ? 'Profesör pansiyonun bahçesine kendine bir kulübe yaptı. Kapısını yedi ama yine de içinde yaşıyor.' : 'Profesör kütüphaneden her gün pansiyona uğruyor ve bahçenizdeki çiçekleri tek tek kontrol ediyor (yiyerek).');
   else if (has('profesor')) out.push('Profesör her ay ikinize de aynı anda bir kartpostal yolluyor. Nasıl yaptığını kimse bilmiyor; zarfların hepsi biraz ısırılmış.');
   else out.push('Profesör hâlâ Ortanokta kütüphanesinde "onursal müdür" ve her ziyaretçiye sizi soruyor.');
@@ -796,13 +957,17 @@ function epilogue(P){
     hayri: E === 'seyyah' ? 'Kaptan Hayri sonunda ehliyetini aldı; artık dünyayı yasal olarak dolaşıyorsunuz.' : 'Kaptan Hayri sonunda ehliyetini aldı ve balonunun adını "İrem & Cengiz" koydu.',
     necmi: E === 'varis' ? 'Fikriye ile Necmi her pazar sizi kahvaltıya çağırıyor ve efsanenin "gerçek" hâlini her seferinde biraz değiştirerek anlatıyor.' : E === 'yerlesik' ? 'Fikriye ile Necmi pansiyonun karşısındaki eve taşındı; akşamları dört kişi tavla oynuyorsunuz.' : 'Fikriye ile Necmi kasabaya geri döndü; kulübeyi "âşıklar için misafirhane" yaptılar ve ilk rezervasyon sizin adınıza.',
     tahsin: E === 'yerlesik' ? 'Başkan Tahsin ortak muhtarlığınızı her toplantıda kıskançlıkla izliyor ama bayramlarda yine lokum getiriyor.' : 'Başkan Tahsin her bayram size bir kutu fıstıklı lokum yolluyor. Kutunun üstünde "Casus olmadığınızı biliyordum" yazıyor.',
-    sevket:'Balıkçı Şevket gölde tuttuğu en büyük balığa sizin adınızı verdi. Balık bu fikre pek sıcak bakmıyor.'
+    sevket:'Balıkçı Şevket gölde tuttuğu en büyük balığa sizin adınızı verdi. Balık bu fikre pek sıcak bakmıyor.',
+    vahit: E === 'ekspres' ? 'Makinist Vahit emekliliğin tadını çıkarıyor ama her hafta istasyona gelip düdüğü bir kez de kendisi çekiyor.' : 'Makinist Vahit Ekspres\'i artık yılda iki kez çalıştırıyor. İkinci seferin adı "İrem ile Cengiz Seferi".',
+    pamuk: E === 'yeti' ? 'Pamuk geçen kış Karlıyayla\'yı ziyarete gitti; köylüler onu davul zurnayla karşıladı.' : E === 'dag' ? 'Pamuk her sabah kapınızın önünde, karda bir kardan adam yıkıp size getiriyor.' : 'Karlıyayla\'dan her ay bir mektup geliyor; içinde Pamuk\'un patisiyle "imzalanmış" bir fotoğraf var.'
   };
   if (best && best[1] >= 2 && DOST[best[0]]) out.push(DOST[best[0]]);
   // yolculuktan izler
   if ((has('altin') || f('sampiyon')) && E !== 'tursu') out.push(together ? 'Altın Turşu Kupası evinizin başköşesinde duruyor; misafirlere ilk onu gösteriyorsunuz.' : 'Altın Turşu Kupası ikinizden birinin evinde başköşede duruyor; altı ayda bir kargoyla yer değiştiriyor.');
   else if (f('jailed') && E !== 'hapis') out.push('Ötenokta hapishanesindeki hücreniz artık bir müze: kapısında "Burada iki âşık tavla oynadı" yazıyor.');
   else if (f('fenerDilek') && E !== 'fener') out.push('Fener Gecesi\'nde uçurduğunuz fener hiç geri gelmedi. İkiniz de dileğinizin yolda olduğuna inanıyorsunuz.');
+  else if (f('buket') && E !== 'dugun') out.push('Nadide Teyze\'nin buketi hâlâ kurutulmuş hâlde duruyor; kimin evinde kalacağına bir türlü karar veremediniz.');
+  else if (f('kagitYuzuk')) out.push('Nadide Teyze kâğıt yüzüğü hâlâ takıyor. Gerçeğini çekmecede saklıyor.');
   else if (f('yavru')) out.push('Köfte Jr. büyüdü ve kasabanın en tombul kedisi oldu.');
   else if (f('rode') && E !== 'seyyah') out.push('Balonla uçtuğunuz gün kasabanın kartpostallarına girdi; turistler hâlâ o kartpostalı alıyor.');
   if (f('sir40')) out.push('Turist çiftin sözü aklınızda: "Kavga edince ilk kim gülerse o kazanır." İkiniz de hep ilk gülmeye çalışıyorsunuz.');
@@ -813,4 +978,4 @@ function epilogue(P){
   out.push(together ? 'Artık "bir sonraki buluşma" diye bir şey yok: her gün buluşuyorsunuz. 💌' : 'Ve bir sonraki buluşmanın tarihi takvimde çoktan işaretli. 💌');
   return out.join(' ');
 }
-const EPI_TOGETHER = ['yerlesik', 'seyyah', 'zengin'];
+const EPI_TOGETHER = ['yerlesik', 'seyyah', 'zengin', 'taksi', 'ekspres', 'dag'];
